@@ -3,8 +3,26 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum BedStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum MachineStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
 }
 
 model User {
@@ -12,7 +30,7 @@ model User {
   username  String   @unique
   password  String
   name      String
-  role      String   @default("STAFF")
+  role      Role     @default(STAFF)
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -26,7 +44,7 @@ model Bed {
   floor       Int
   section     String
   position    Int
-  status      String    @default("AVAILABLE")
+  status      BedStatus @default(AVAILABLE)
   patientName String?
   patientId   String?
   notes       String?
@@ -38,15 +56,15 @@ model Bed {
 }
 
 model Machine {
-  id          String   @id @default(cuid())
-  machineCode String   @unique
+  id          String        @id @default(cuid())
+  machineCode String        @unique
   floor       Int
-  status      String   @default("AVAILABLE")
+  status      MachineStatus @default(AVAILABLE)
   notes       String?
-  bedId       String?  @unique
-  bed         Bed?     @relation(fields: [bedId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  bedId       String?       @unique
+  bed         Bed?          @relation(fields: [bedId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   @@map("machines")
 }

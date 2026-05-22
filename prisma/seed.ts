@@ -1,24 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, BedStatus, MachineStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
-
-const Role = {
-  ADMIN: 'ADMIN',
-  STAFF: 'STAFF',
-} as const;
-
-const BedStatus = {
-  AVAILABLE: 'AVAILABLE',
-  OCCUPIED: 'OCCUPIED',
-  MAINTENANCE: 'MAINTENANCE',
-} as const;
-
-const MachineStatus = {
-  AVAILABLE: 'AVAILABLE',
-  IN_USE: 'IN_USE',
-  MAINTENANCE: 'MAINTENANCE',
-} as const;
 
 // Lantai 2 bed layout (matching the floor map image)
 const lantai2Beds = [
@@ -117,7 +100,7 @@ const lantai3Beds = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding database (SQLite)...');
+  console.log('🌱 Seeding database...');
 
   // Create admin user
   const hashedPassword = await bcrypt.hash('admin123', 12);
