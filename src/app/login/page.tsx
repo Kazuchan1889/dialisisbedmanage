@@ -25,8 +25,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.ok) {
-      router.push('/dashboard');
-      router.refresh();
+      window.location.href = '/dashboard';
     } else {
       setError('Username atau password salah. Silakan coba lagi.');
     }
