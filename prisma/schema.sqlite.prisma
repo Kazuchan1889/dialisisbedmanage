@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   @default("STAFF")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Bed {
+  id          String    @id @default(cuid())
+  bedCode     String    @unique
+  floor       Int
+  section     String
+  position    Int
+  status      String    @default("AVAILABLE")
+  patientName String?
+  patientId   String?
+  notes       String?
+  machine     Machine?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("beds")
+}
+
+model Machine {
+  id          String   @id @default(cuid())
+  machineCode String   @unique
+  floor       Int
+  status      String   @default("AVAILABLE")
+  notes       String?
+  bedId       String?  @unique
+  bed         Bed?     @relation(fields: [bedId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("machines")
+}

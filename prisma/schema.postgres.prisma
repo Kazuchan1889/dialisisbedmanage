@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum BedStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum MachineStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      Role     @default(STAFF)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Bed {
+  id          String    @id @default(cuid())
+  bedCode     String    @unique
+  floor       Int
+  section     String
+  position    Int
+  status      BedStatus @default(AVAILABLE)
+  patientName String?
+  patientId   String?
+  notes       String?
+  machine     Machine?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("beds")
+}
+
+model Machine {
+  id          String        @id @default(cuid())
+  machineCode String        @unique
+  floor       Int
+  status      MachineStatus @default(AVAILABLE)
+  notes       String?
+  bedId       String?       @unique
+  bed         Bed?          @relation(fields: [bedId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("machines")
+}
