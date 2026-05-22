@@ -1,0 +1,84 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("Fetching bed group by...");
+  const bedGroups = await prisma.bed.groupBy({
+    by: ['floor', 'status'],
+    _count: {
+      id: true,
+    },
+  });
+  console.log("Bed groups:", bedGroups);
+
+  console.log("Fetching machine group by...");
+  const machineGroups = await prisma.machine.groupBy({
+    by: ['status'],
+    _count: {
+      id: true,
+    },
+  });
+  console.log("Machine groups:", machineGroups);
+
+  // process stats
+  let totalBeds = 0;
+  let occupiedBeds = 0;
+  let availableBeds = 0;
+  let maintenanceBeds = 0;
+  let floor2Total = 0;
+  let floor2Occupied = 0;
+  let floor3Total = 0;
+  let floor3Occupied = 0;
+
+  for (const group of bedGroups) {
+    const count = group._count.id;
+    totalBeds += count;
+
+    if (group.status === 'OCCUPIED') {
+      occupiedBeds += count;
+    } else if (group.status === 'AVAILABLE') {
+      availableBeds += count;
+    } else if (group.status === 'MAINTENANCE') {
+      maintenanceBeds += count;
+    }
+
+    if (group.floor === 2) {
+      floor2Total += count;
+      if (group.status === 'OCCUPIED') {
+        floor2Occupied += count;
+      }
+    } else if (group.floor === 3) {
+      floor3Total += count;
+      if (group.status === 'OCCUPIED') {
+        floor3Occupied += count;
+      }
+    }
+  }
+
+  let totalMachines = 0;
+  let machineMaintenance = 0;
+
+  for (const group of machineGroups) {
+    const count = group._count.id;
+    totalMachines += count;
+    if (group.status === 'MAINTENANCE') {
+      machineMaintenance += count;
+    }
+  }
+
+  console.log("Processed Stats:", {
+    totalBeds,
+    occupiedBeds,
+    availableBeds,
+    maintenanceBeds,
+    totalMachines,
+    machineMaintenance,
+    floor2: { total: floor2Total, occupied: floor2Occupied, available: floor2Total - floor2Occupied },
+    floor3: { total: floor3Total, occupied: floor3Occupied, available: floor3Total - floor3Occupied },
+    occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,
+  });
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
