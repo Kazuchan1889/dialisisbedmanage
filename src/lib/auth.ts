@@ -14,21 +14,32 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { username: credentials.username },
+          });
 
-        if (!user || !user.active) return null;
+          if (!user || !user.active) {
+            console.log(`[NextAuth] Login failed: User not found or inactive (${credentials.username})`);
+            return null;
+          }
 
-        const passwordMatch = await bcrypt.compare(credentials.password, user.password);
-        if (!passwordMatch) return null;
+          const passwordMatch = await bcrypt.compare(credentials.password, user.password);
+          if (!passwordMatch) {
+            console.log(`[NextAuth] Login failed: Incorrect password for ${credentials.username}`);
+            return null;
+          }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.username,
-          role: user.role,
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.username,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('[NextAuth] Error in authorize credentials provider:', error);
+          throw error;
+        }
       },
     }),
   ],
@@ -55,4 +66,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true' || true,
 };
