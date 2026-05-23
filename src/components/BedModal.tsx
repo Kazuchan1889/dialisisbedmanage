@@ -233,25 +233,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
             </div>
           </div>
 
-          {/* Status Selection (Disabled if a nurse/technician is selected, to enforce dynamic auto-status) */}
-          <div className="form-group">
-            <label className="form-label">Status Tempat Tidur</label>
-            <select
-              className="form-select"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
-              disabled={!!selectedNurseId}
-            >
-              <option value="AVAILABLE">✅ Tersedia</option>
-              <option value="OCCUPIED">🔴 Terisi / Pasien</option>
-              <option value="MAINTENANCE">🟡 Perawatan / Perbaikan</option>
-            </select>
-            {!!selectedNurseId && (
-              <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
-                * Status dikunci secara otomatis berdasarkan peran pengguna yang ditugaskan.
-              </span>
-            )}
-          </div>
 
           {/* Patient fields - only shown when occupied (and not selected a technician) */}
           {status === 'OCCUPIED' && (
