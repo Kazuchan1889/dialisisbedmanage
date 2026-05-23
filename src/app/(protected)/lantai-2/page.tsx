@@ -121,101 +121,100 @@ export default function Lantai2Page() {
             [Left large section] [Center-left] [Center-right] [Right large section]
             [Bottom center section]
           */}
-          <div style={{ minWidth: 720 }}>
+          <div style={{ minWidth: 850 }}>
 
-            {/* ===== TOP ROW ===== */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 12 }}>
-
-              {/* Top-Left Section A - Blue bordered */}
-              <div className="bed-section" style={{ minWidth: 190 }}>
-                <div className="bed-section-label">Seksi A</div>
-                {/* 2 columns x 4 rows */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
+            {/* ===== ROW 1: TOP ===== */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 16, alignItems: 'stretch' }}>
+              
+              {/* Section A - Left of Nurse Room (4 Beds) */}
+              <div className="bed-section" style={{ width: 190, padding: 12 }}>
+                <div className="bed-section-label">Seksi A (4 Bed)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-A1')}{B('L2-A2')}
                   {B('L2-A3')}{B('L2-A4')}
-                  {B('L2-A5')}{B('L2-A6')}
-                  {B('L2-A7')}{B('L2-A8')}
                 </div>
               </div>
 
-              {/* Center — Nurse Station */}
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 130 }}>
-                <div className="nurse-station" style={{ width: 130, height: 65 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>Nurse Station</span>
+              {/* Center — Nurse Room */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 12, padding: 16 }}>
+                <div className="nurse-station" style={{ width: '100%', maxWidth: 200, height: 70 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>Nurse Room</span>
                 </div>
               </div>
 
-              {/* Top-right — Doctor Consultation Room */}
-              <div className="bed-section" style={{ width: 170, minHeight: 130 }}>
-                <div className="doctor-room" style={{ height: '100%', minHeight: 110 }}>
-                  <div style={{ textAlign: 'center' }}>
+              {/* Right — Doctor Consultation Room */}
+              <div className="bed-section" style={{ width: 190, padding: 12, display: 'flex' }}>
+                <div className="doctor-room" style={{ flex: 1, height: '100%', minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center', fontWeight: 600 }}>
                     <div>Doctor</div>
                     <div>Consultation</div>
                     <div>Room</div>
                   </div>
                 </div>
               </div>
+
             </div>
 
-            {/* ===== MIDDLE ROW ===== */}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
+            {/* ===== ROW 2: BOTTOM ===== */}
+            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
 
-              {/* Left large section B */}
-              <div className="bed-section" style={{ minWidth: 190 }}>
-                <div className="bed-section-label">Seksi B</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
+              {/* Section B - Under Section A (7 Beds) */}
+              <div className="bed-section" style={{ width: 190, padding: 12 }}>
+                <div className="bed-section-label">Seksi B (7 Bed)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-B1')}{B('L2-B2')}
                   {B('L2-B3')}{B('L2-B4')}
                   {B('L2-B5')}{B('L2-B6')}
-                  {B('L2-B7')}{B('L2-B8')}
-                  {B('L2-B9')}{B('L2-B10')}
+                  {B('L2-B7')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
 
-              {/* Center-left section C */}
-              <div className="bed-section" style={{ flex: '0 0 auto' }}>
-                <div className="bed-section-label">Seksi C</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
-                  {B('L2-C1')}{B('L2-C2')}
-                  {B('L2-C3')}{B('L2-C4')}
-                  {B('L2-C5')}{B('L2-C6')}
+              {/* Section C - Center, Right of Section B (13 Beds, divided with partition) */}
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column' }}>
+                <div className="bed-section-label">Seksi C (13 Bed)</div>
+                
+                <div style={{ display: 'flex', gap: 16, height: '100%' }}>
+                  
+                  {/* Left part of Section C (6 beds) */}
+                  <div style={{ flex: 1, paddingRight: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 1</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
+                      {B('L2-C1')}{B('L2-C2')}
+                      {B('L2-C3')}{B('L2-C4')}
+                      {B('L2-C5')}{B('L2-C6')}
+                    </div>
+                  </div>
+
+                  {/* Visual wall / partition line */}
+                  <div style={{ borderRight: '2px dashed #cbd5e1', alignSelf: 'stretch', margin: '4px 0' }} />
+
+                  {/* Right part of Section C (7 beds) */}
+                  <div style={{ flex: 1.2, paddingLeft: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 2 (Sekat)</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
+                      {B('L2-C7')}{B('L2-C8')}
+                      {B('L2-C9')}{B('L2-C10')}
+                      {B('L2-C11')}{B('L2-C12')}
+                      {B('L2-C13')}<div style={{ width: 72, height: 22 }} />
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-              {/* Center-right section D */}
-              <div className="bed-section" style={{ flex: '0 0 auto' }}>
-                <div className="bed-section-label">Seksi D</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
+              {/* Section D - Right of Section C (7 Beds) */}
+              <div className="bed-section" style={{ width: 190, padding: 12 }}>
+                <div className="bed-section-label">Seksi D (7 Bed)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-D1')}{B('L2-D2')}
                   {B('L2-D3')}{B('L2-D4')}
                   {B('L2-D5')}{B('L2-D6')}
+                  {B('L2-D7')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
 
-              {/* Right large section E */}
-              <div className="bed-section" style={{ minWidth: 190 }}>
-                <div className="bed-section-label">Seksi E</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
-                  {B('L2-E1')}{B('L2-E2')}
-                  {B('L2-E3')}{B('L2-E4')}
-                  {B('L2-E5')}{B('L2-E6')}
-                  {B('L2-E7')}{B('L2-E8')}
-                  {B('L2-E9')}{B('L2-E10')}
-                </div>
-              </div>
             </div>
 
-            {/* ===== BOTTOM CENTER SECTION F ===== */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div className="bed-section" style={{ display: 'inline-block' }}>
-                <div className="bed-section-label">Seksi F</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 8px' }}>
-                  {B('L2-F1')}{B('L2-F2')}
-                  {B('L2-F3')}{B('L2-F4')}
-                  {B('L2-F5')}{B('L2-F6')}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
