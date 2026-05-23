@@ -104,6 +104,54 @@ export default function Lantai2Page() {
           <p className="page-subtitle">DYALISIS BED AND MACHINE MANAGEMENT — Klinik Utama Jakarta Kidney Center Lantai 2</p>
         </div>
 
+        {/* Summary */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
+            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #1e6fa6, #2d8fd6)', width: 38, height: 38 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M2 10h20v10H2zM2 10V6a2 2 0 012-2h16a2 2 0 012 2v4"/>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ fontSize: 22 }}>{beds.length}</div>
+              <div className="stat-card-label">Total Bed</div>
+            </div>
+          </div>
+          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
+            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', width: 38, height: 38 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3"/>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ fontSize: 22, color: '#10b981' }}>{stats.available}</div>
+              <div className="stat-card-label">Tersedia</div>
+            </div>
+          </div>
+          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
+            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)', width: 38, height: 38 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ fontSize: 22, color: '#ef4444' }}>{stats.occupied}</div>
+              <div className="stat-card-label">Terisi</div>
+            </div>
+          </div>
+          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
+            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', width: 38, height: 38 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ fontSize: 22, color: '#f59e0b' }}>{stats.maintenance}</div>
+              <div className="stat-card-label">Perawatan</div>
+            </div>
+          </div>
+        </div>
+
         <div className="floor-map-container">
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 2 }}>
             DYALISIS BED AND MACHINE MANAGEMENT
@@ -170,32 +218,29 @@ export default function Lantai2Page() {
               </div>
 
               {/* Section C - Center, Right of Section B (13 Beds, divided with partition) */}
-              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column' }}>
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div className="bed-section-label">Seksi C (13 Bed)</div>
                 
-                <div style={{ display: 'flex', gap: 16, height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'space-between' }}>
                   
-                  {/* Left part of Section C (6 beds) */}
-                  <div style={{ flex: 1, paddingRight: 8 }}>
+                  {/* Top part of Section C (6 beds) */}
+                  <div style={{ flex: 1, paddingBottom: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 1</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                      {B('L2-C1')}{B('L2-C2')}
-                      {B('L2-C3')}{B('L2-C4')}
-                      {B('L2-C5')}{B('L2-C6')}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px 10px' }}>
+                      {B('L2-C1')}{B('L2-C2')}{B('L2-C3')}
+                      {B('L2-C4')}{B('L2-C5')}{B('L2-C6')}
                     </div>
                   </div>
 
-                  {/* Visual wall / partition line */}
-                  <div style={{ borderRight: '2px dashed #cbd5e1', alignSelf: 'stretch', margin: '4px 0' }} />
+                  {/* Visual wall / partition line (horizontal) */}
+                  <div style={{ borderTop: '2px dashed #cbd5e1', width: '100%', margin: '4px 0' }} />
 
-                  {/* Right part of Section C (7 beds) */}
-                  <div style={{ flex: 1.2, paddingLeft: 8 }}>
+                  {/* Bottom part of Section C (7 beds) */}
+                  <div style={{ flex: 1, paddingTop: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 2 (Sekat)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                      {B('L2-C7')}{B('L2-C8')}
-                      {B('L2-C9')}{B('L2-C10')}
-                      {B('L2-C11')}{B('L2-C12')}
-                      {B('L2-C13')}<div style={{ width: 72, height: 22 }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px 10px' }}>
+                      {B('L2-C7')}{B('L2-C8')}{B('L2-C9')}{B('L2-C10')}
+                      {B('L2-C11')}{B('L2-C12')}{B('L2-C13')}<div style={{ width: 72, height: 22 }} />
                     </div>
                   </div>
 
@@ -218,53 +263,7 @@ export default function Lantai2Page() {
           </div>
         </div>
 
-        {/* Summary */}
-        <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #1e6fa6, #2d8fd6)', width: 38, height: 38 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M2 10h20v10H2zM2 10V6a2 2 0 012-2h16a2 2 0 012 2v4"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 22 }}>{beds.length}</div>
-              <div className="stat-card-label">Total Bed</div>
-            </div>
-          </div>
-          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', width: 38, height: 38 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 22, color: '#10b981' }}>{stats.available}</div>
-              <div className="stat-card-label">Tersedia</div>
-            </div>
-          </div>
-          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)', width: 38, height: 38 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 22, color: '#ef4444' }}>{stats.occupied}</div>
-              <div className="stat-card-label">Terisi</div>
-            </div>
-          </div>
-          <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', width: 38, height: 38 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 22, color: '#f59e0b' }}>{stats.maintenance}</div>
-              <div className="stat-card-label">Perawatan</div>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Bed Modal */}
