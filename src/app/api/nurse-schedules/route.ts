@@ -87,6 +87,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Start time must be before end time' }, { status: 400 });
     }
 
+    // Fetch user to check role
+    const user = await prisma.user.findUnique({
+      where: { id: nurseId }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const schedule = await prisma.nurseSchedule.create({
       data: {
         bedId,
@@ -97,13 +106,23 @@ export async function POST(req: NextRequest) {
       },
       include: {
         nurse: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, role: true },
         },
         bed: {
           select: { id: true, bedCode: true },
         },
       },
     });
+
+    // Auto-update bed status if the schedule is currently active
+    const now = new Date();
+    if (now >= start && now <= end) {
+      const newBedStatus = user.role === 'TECHNICIAN' ? 'MAINTENANCE' : 'OCCUPIED';
+      await prisma.bed.update({
+        where: { id: bedId },
+        data: { status: newBedStatus }
+      });
+    }
 
     return NextResponse.json(schedule, { status: 201 });
   } catch (error: any) {

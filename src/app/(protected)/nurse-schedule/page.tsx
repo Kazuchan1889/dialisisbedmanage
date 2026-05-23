@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
 
 interface Nurse {
   id: string;
@@ -58,7 +57,7 @@ function ScheduleModal({
       })
       .catch(console.error);
 
-    // Fetch active nurses
+    // Fetch active nurses (staff, technician, admin)
     fetch('/api/users?activeOnly=true')
       .then((res) => res.json())
       .then((data) => setNurses(data))
@@ -71,7 +70,7 @@ function ScheduleModal({
     setError('');
 
     if (!selectedBedId || !selectedNurseId) {
-      setError('Harap pilih tempat tidur dan perawat.');
+      setError('Harap pilih tempat tidur dan perawat/teknisi.');
       setSaving(false);
       return;
     }
@@ -110,13 +109,16 @@ function ScheduleModal({
     }
   };
 
+  const selectedNurse = nurses.find((n) => n.id === selectedNurseId);
+  const selectedRole = selectedNurse?.role;
+
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div className="modal-header">
           <div>
-            <div className="modal-title">Tambah Jadwal Perawat</div>
-            <div className="modal-subtitle">Tugaskan perawat pada tempat tidur & waktu tertentu</div>
+            <div className="modal-title">Tambah Jadwal Baru</div>
+            <div className="modal-subtitle">Tugaskan staff/teknisi pada tempat tidur & waktu tertentu</div>
           </div>
           <button className="modal-close" onClick={onClose}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -147,20 +149,32 @@ function ScheduleModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Pilih Perawat *</label>
+              <label className="form-label">Pilih Pengguna *</label>
               <select
                 className="form-select"
                 value={selectedNurseId}
                 onChange={(e) => setSelectedNurseId(e.target.value)}
                 required
               >
-                <option value="">-- Pilih Perawat --</option>
+                <option value="">-- Pilih Pengguna --</option>
                 {nurses.map((n) => (
                   <option key={n.id} value={n.id}>
-                    {n.name} ({n.role === 'ADMIN' ? 'Admin' : 'Staff'})
+                    {n.name} ({n.role === 'ADMIN' ? 'Admin' : n.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})
                   </option>
                 ))}
               </select>
+
+              {/* Dynamic role notices */}
+              {selectedRole === 'TECHNICIAN' && (
+                <div style={{ marginTop: 8, fontSize: 11, color: '#d97706', fontWeight: 600 }}>
+                  🔧 Teknisi dipilih. Jika jadwal aktif saat ini, status bed akan otomatis diubah menjadi "Perawatan/Perbaikan".
+                </div>
+              )}
+              {selectedRole && (selectedRole === 'STAFF' || selectedRole === 'ADMIN') && (
+                <div style={{ marginTop: 8, fontSize: 11, color: '#059669', fontWeight: 600 }}>
+                  👤 Perawat/Staff dipilih. Jika jadwal aktif saat ini, status bed akan otomatis diubah menjadi "Terisi / Pasien".
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 12 }}>
@@ -201,7 +215,7 @@ function ScheduleModal({
               <input
                 type="text"
                 className="form-input"
-                placeholder="Misal: Shift Pagi, Pendampingan Khusus"
+                placeholder={selectedRole === 'TECHNICIAN' ? 'Misal: Perbaikan pompa dialisat' : 'Misal: Shift Pagi, Pendampingan Khusus'}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -230,6 +244,7 @@ export default function NurseSchedulePage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ongoing' | 'history'>('ongoing');
   
   // Filters
   const [search, setSearch] = useState('');
@@ -273,23 +288,35 @@ export default function NurseSchedulePage() {
     }
   };
 
+  const now = new Date();
+  
+  // Split schedules into On-Going (current and future) vs History (past)
+  // History means endTime <= now
+  // OnGoing means endTime > now
+  const ongoingSchedules = schedules.filter((s) => new Date(s.endTime) > now);
+  const historySchedules = schedules.filter((s) => new Date(s.endTime) <= now);
+
+  const displayedSchedules = activeTab === 'ongoing' ? ongoingSchedules : historySchedules;
+
   const handleExportCSV = () => {
-    if (schedules.length === 0) {
-      alert('Tidak ada data jadwal untuk diekspor.');
+    const listToExport = displayedSchedules;
+    if (listToExport.length === 0) {
+      alert(`Tidak ada data ${activeTab === 'ongoing' ? 'ongoing' : 'riwayat'} untuk diekspor.`);
       return;
     }
 
     // Set up table columns and header
-    const headers = ['Tanggal', 'Lantai', 'Seksi', 'Bed', 'Nama Perawat', 'Jam Mulai', 'Jam Selesai', 'Catatan'];
+    const headers = ['Tanggal', 'Lantai', 'Seksi', 'Bed', 'Nama Pengguna', 'Role', 'Jam Mulai', 'Jam Selesai', 'Catatan'];
     
     // Process rows
-    const rows = schedules.map((s) => {
+    const rows = listToExport.map((s) => {
       const startDate = new Date(s.startTime);
       const endDate = new Date(s.endTime);
       
       const dateStr = startDate.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' });
       const startTimeStr = startDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
       const endTimeStr = endDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const roleStr = s.nurse.role === 'ADMIN' ? 'Admin' : s.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff';
 
       return [
         dateStr,
@@ -297,6 +324,7 @@ export default function NurseSchedulePage() {
         s.bed.section,
         s.bed.bedCode,
         s.nurse.name,
+        roleStr,
         startTimeStr,
         endTimeStr,
         s.notes || '-',
@@ -313,7 +341,9 @@ export default function NurseSchedulePage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Jadwal_Tugas_Perawat_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    const fileNameSuffix = activeTab === 'ongoing' ? 'Ongoing' : 'Riwayat_Selesai';
+    link.setAttribute('download', `Jadwal_Tugas_Perawat_${fileNameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -324,7 +354,7 @@ export default function NurseSchedulePage() {
     <>
       <div className="topbar">
         <div>
-          <div className="topbar-title">Nurse Schedule</div>
+          <div className="topbar-title">Nurse & Tech Schedule</div>
           <div className="topbar-date">Klinik Utama Jakarta Kidney Center</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -332,7 +362,7 @@ export default function NurseSchedulePage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Ekspor ke Excel (CSV)
+            Ekspor {activeTab === 'ongoing' ? 'On-Going' : 'Riwayat'} ke Excel
           </button>
           <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
@@ -345,8 +375,8 @@ export default function NurseSchedulePage() {
 
       <div className="page-container">
         <div className="page-header">
-          <h1 className="page-title">Jadwal Tugas Perawat</h1>
-          <p className="page-subtitle">Daftar penugasan perawat pada bed & seksi dialisis</p>
+          <h1 className="page-title">Jadwal Tugas Staf & Teknisi</h1>
+          <p className="page-subtitle">Daftar penugasan perawat dan teknisi pada bed & seksi dialisis</p>
         </div>
 
         {/* Filter Bar */}
@@ -362,7 +392,7 @@ export default function NurseSchedulePage() {
             <input
               type="text"
               className="search-input"
-              placeholder="Cari perawat atau bed (misal: L2-A1)..."
+              placeholder="Cari nama pengguna atau bed (misal: L2-A1)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -411,35 +441,66 @@ export default function NurseSchedulePage() {
           )}
         </div>
 
-        {/* Stats Summary */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div className="stat-card" style={{ padding: '12px 18px', minWidth: 140 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #1e6fa6, #2d8fd6)', width: 36, height: 36 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M19 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 20 }}>{schedules.length}</div>
-              <div className="stat-card-label">Jumlah Jadwal</div>
-            </div>
-          </div>
-          <div className="stat-card" style={{ padding: '12px 18px', minWidth: 140 }}>
-            <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', width: 36, height: 36 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-              </svg>
-            </div>
-            <div>
-              <div className="stat-card-value" style={{ fontSize: 20, color: '#10b981' }}>
-                {schedules.filter(s => {
-                  const now = new Date();
-                  return now >= new Date(s.startTime) && now <= new Date(s.endTime);
-                }).length}
-              </div>
-              <div className="stat-card-label">Tugas Aktif Saat Ini</div>
-            </div>
-          </div>
+        {/* TABS CONTAINER */}
+        <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: 20, gap: 8 }}>
+          <button
+            onClick={() => setActiveTab('ongoing')}
+            style={{
+              padding: '12px 20px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'ongoing' ? '3px solid #1e6fa6' : '3px solid transparent',
+              color: activeTab === 'ongoing' ? '#1e6fa6' : '#64748b',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.15s ease'
+            }}
+          >
+            🔄 Sedang Berjalan (On-Going)
+            <span style={{
+              background: activeTab === 'ongoing' ? '#eff6ff' : '#f1f5f9',
+              color: activeTab === 'ongoing' ? '#1e6fa6' : '#64748b',
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 20,
+              fontWeight: 700
+            }}>
+              {ongoingSchedules.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            style={{
+              padding: '12px 20px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'history' ? '3px solid #1e6fa6' : '3px solid transparent',
+              color: activeTab === 'history' ? '#1e6fa6' : '#64748b',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              transition: 'all 0.15s ease'
+            }}
+          >
+            📋 Riwayat Selesai (History)
+            <span style={{
+              background: activeTab === 'history' ? '#f0fdf4' : '#f1f5f9',
+              color: activeTab === 'history' ? '#15803d' : '#64748b',
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 20,
+              fontWeight: 700
+            }}>
+              {historySchedules.length}
+            </span>
+          </button>
         </div>
 
         {/* Data Table */}
@@ -454,7 +515,8 @@ export default function NurseSchedulePage() {
               <table>
                 <thead>
                   <tr>
-                    <th>Perawat</th>
+                    <th>Pengguna</th>
+                    <th>Role</th>
                     <th>Bed / Lokasi</th>
                     <th>Tanggal Tugas</th>
                     <th>Jam Kerja</th>
@@ -464,20 +526,19 @@ export default function NurseSchedulePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {schedules.length === 0 ? (
+                  {displayedSchedules.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
-                        Tidak ada penugasan perawat ditemukan.
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                        Tidak ada data tugas {activeTab === 'ongoing' ? 'sedang berjalan' : 'riwayat selesai'} ditemukan.
                       </td>
                     </tr>
                   ) : (
-                    schedules.map((item) => {
+                    displayedSchedules.map((item) => {
                       const dateObj = new Date(item.startTime);
                       const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
                       const startTimeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                       const endTimeStr = new Date(item.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                       
-                      const now = new Date();
                       const isActive = now >= new Date(item.startTime) && now <= new Date(item.endTime);
                       const isUpcoming = now < new Date(item.startTime);
 
@@ -489,6 +550,8 @@ export default function NurseSchedulePage() {
                                 width: 32, height: 32, borderRadius: 8, flexShrink: 0,
                                 background: item.nurse.role === 'ADMIN'
                                   ? 'linear-gradient(135deg, #6366f1, #818cf8)'
+                                  : item.nurse.role === 'TECHNICIAN'
+                                  ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
                                   : 'linear-gradient(135deg, #1e6fa6, #2d8fd6)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: 11, fontWeight: 700, color: 'white',
@@ -500,6 +563,11 @@ export default function NurseSchedulePage() {
                                 <div style={{ fontSize: 10, color: '#64748b' }}>@{item.nurse.username}</div>
                               </div>
                             </div>
+                          </td>
+                          <td>
+                            <span className={`badge badge-${item.nurse.role === 'ADMIN' ? 'admin' : item.nurse.role === 'TECHNICIAN' ? 'maintenance' : 'staff'}`}>
+                              {item.nurse.role === 'ADMIN' ? '🛡️ Admin' : item.nurse.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Perawat'}
+                            </span>
                           </td>
                           <td>
                             <div>

@@ -7,7 +7,7 @@ interface User {
   id: string;
   username: string;
   name: string;
-  role: 'ADMIN' | 'STAFF';
+  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN';
   active: boolean;
   createdAt: string;
 }
@@ -15,7 +15,7 @@ interface User {
 interface UserFormData {
   username: string;
   name: string;
-  role: 'ADMIN' | 'STAFF';
+  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN';
   password: string;
 }
 
@@ -124,6 +124,7 @@ function UserModal({
                 onChange={(e) => setForm({ ...form, role: e.target.value as any })}
               >
                 <option value="STAFF">Staff / Perawat</option>
+                <option value="TECHNICIAN">Technician / Teknisi</option>
                 <option value="ADMIN">Administrator</option>
               </select>
             </div>
@@ -331,6 +332,8 @@ export default function UserManagementPage() {
                               width: 32, height: 32, borderRadius: 8, flexShrink: 0,
                               background: user.role === 'ADMIN'
                                 ? 'linear-gradient(135deg, #6366f1, #818cf8)'
+                                : user.role === 'TECHNICIAN'
+                                ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
                                 : 'linear-gradient(135deg, #1e6fa6, #2d8fd6)',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: 11, fontWeight: 700, color: 'white',
@@ -354,8 +357,8 @@ export default function UserManagementPage() {
                           </code>
                         </td>
                         <td>
-                          <span className={`badge badge-${user.role === 'ADMIN' ? 'admin' : 'staff'}`}>
-                            {user.role === 'ADMIN' ? '🛡️ Admin' : '👤 Staff'}
+                          <span className={`badge badge-${user.role === 'ADMIN' ? 'admin' : user.role === 'TECHNICIAN' ? 'maintenance' : 'staff'}`}>
+                            {user.role === 'ADMIN' ? '🛡️ Admin' : user.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Staff'}
                           </span>
                         </td>
                         <td>

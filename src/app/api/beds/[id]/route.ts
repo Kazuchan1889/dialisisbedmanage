@@ -32,15 +32,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { status, patientName, patientId, notes, nurseSchedule } = body;
+  const { status, patientName, patientId, notes, nurseSchedule, unassignActiveSchedule } = body;
 
   // Update bed information
   const bed = await prisma.bed.update({
     where: { id: params.id },
     data: {
       ...(status !== undefined && { status }),
-      ...(patientName !== undefined && { patientName: status === 'AVAILABLE' ? null : patientName }),
-      ...(patientId !== undefined && { patientId: status === 'AVAILABLE' ? null : patientId }),
+      patientName: status === 'AVAILABLE' ? null : (patientName !== undefined ? patientName : undefined),
+      patientId: status === 'AVAILABLE' ? null : (patientId !== undefined ? patientId : undefined),
       ...(notes !== undefined && { notes }),
     },
     include: { machine: true },
@@ -55,6 +55,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       data: { status: machineStatus },
     });
     bed.machine = updatedMachine;
+  }
+
+  // End active schedules if unassign is requested
+  if (unassignActiveSchedule) {
+    const now = new Date();
+    await prisma.nurseSchedule.updateMany({
+      where: {
+        bedId: params.id,
+        startTime: { lte: now },
+        endTime: { gte: now }
+      },
+      data: {
+        endTime: now
+      }
+    });
   }
 
   // Create nurse schedule if provided

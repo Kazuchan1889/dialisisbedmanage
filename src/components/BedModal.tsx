@@ -10,6 +10,7 @@ interface NurseSchedule {
   notes?: string | null;
   nurse: {
     name: string;
+    role: string;
   };
 }
 
@@ -67,12 +68,30 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
       .then((data) => setDetailedBed(data))
       .catch(console.error);
 
-    // Fetch active nurses
+    // Fetch active nurses (staff, technician, admin)
     fetch('/api/users?activeOnly=true')
       .then((res) => res.json())
       .then((data) => setNurses(data))
       .catch(console.error);
   }, [bed.id]);
+
+  // Find active schedule (if any)
+  const now = new Date();
+  const activeSchedule = detailedBed.nurseSchedules?.find((ns) => {
+    return now >= new Date(ns.startTime) && now <= new Date(ns.endTime);
+  });
+
+  const handleNurseSelect = (id: string) => {
+    setSelectedNurseId(id);
+    const user = nurses.find((n) => n.id === id);
+    if (user) {
+      if (user.role === 'TECHNICIAN') {
+        setStatus('MAINTENANCE');
+      } else if (user.role === 'STAFF' || user.role === 'ADMIN') {
+        setStatus('OCCUPIED');
+      }
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -118,6 +137,34 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     }
   };
 
+  const handleUnassign = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/beds/${bed.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'AVAILABLE',
+          unassignActiveSchedule: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Gagal melepas penugasan');
+      }
+
+      const updated = await res.json();
+      onSave(updated);
+      onClose();
+    } catch (e: any) {
+      setError(e.message || 'Gagal melepas penugasan. Coba lagi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDeleteSchedule = async (scheduleId: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus jadwal perawat ini?')) return;
     try {
@@ -143,6 +190,8 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   };
 
   const sc = statusColors[status];
+  const selectedUser = nurses.find((n) => n.id === selectedNurseId);
+  const selectedUserRole = selectedUser?.role;
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -184,21 +233,27 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
             </div>
           </div>
 
-          {/* Status */}
+          {/* Status Selection (Disabled if a nurse/technician is selected, to enforce dynamic auto-status) */}
           <div className="form-group">
             <label className="form-label">Status Tempat Tidur</label>
             <select
               className="form-select"
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
+              disabled={!!selectedNurseId}
             >
               <option value="AVAILABLE">✅ Tersedia</option>
               <option value="OCCUPIED">🔴 Terisi / Pasien</option>
               <option value="MAINTENANCE">🟡 Perawatan / Perbaikan</option>
             </select>
+            {!!selectedNurseId && (
+              <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+                * Status dikunci secara otomatis berdasarkan peran pengguna yang ditugaskan.
+              </span>
+            )}
           </div>
 
-          {/* Patient fields - only shown when occupied */}
+          {/* Patient fields - only shown when occupied (and not selected a technician) */}
           {status === 'OCCUPIED' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -209,6 +264,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                   placeholder="Nama pasien"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
+                  required={status === 'OCCUPIED'}
                 />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -226,10 +282,12 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
 
           {/* Notes */}
           <div className="form-group">
-            <label className="form-label">Catatan (opsional)</label>
+            <label className="form-label">
+              {status === 'MAINTENANCE' ? 'Catatan Kerusakan/Perbaikan (opsional)' : 'Catatan Bed (opsional)'}
+            </label>
             <textarea
               className="form-textarea"
-              placeholder="Tambahkan catatan..."
+              placeholder={status === 'MAINTENANCE' ? 'Jelaskan detail kerusakan atau perbaikan...' : 'Tambahkan catatan...'}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -256,26 +314,68 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
             </div>
           )}
 
-          {/* NURSE SCHEDULE ASSIGNMENT SECTION */}
+          {/* NURSE & TECHNICIAN ASSIGNMENT SECTION */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, marginTop: 16 }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>
-              🏥 Penugasan Perawat (Nurse Assignment)
+              🏥 Penugasan Tugas & Jadwal
             </h3>
+
+            {/* UN-ASSIGN BUTTON (Shown if there's an active schedule) */}
+            {activeSchedule && (
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
+                padding: '12px 14px', marginBottom: 16
+              }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {activeSchedule.nurse.name}
+                    <span className={`badge badge-${activeSchedule.nurse.role === 'TECHNICIAN' ? 'maintenance' : activeSchedule.nurse.role === 'ADMIN' ? 'admin' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
+                      {activeSchedule.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#1e40af', marginTop: 2 }}>
+                    ⏰ {new Date(activeSchedule.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSchedule.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  style={{ background: '#ef4444', color: 'white', padding: '6px 12px', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                  onClick={handleUnassign}
+                  disabled={saving}
+                >
+                  Lepas Penugasan (Un-assign)
+                </button>
+              </div>
+            )}
             
             <div className="form-group">
-              <label className="form-label">Pilih Perawat</label>
+              <label className="form-label">Tugaskan Pengguna Baru</label>
               <select
                 className="form-select"
                 value={selectedNurseId}
-                onChange={(e) => setSelectedNurseId(e.target.value)}
+                onChange={(e) => handleNurseSelect(e.target.value)}
               >
-                <option value="">-- Pilih untuk Tugaskan Perawat Baru --</option>
+                <option value="">-- Pilih Pengguna untuk Ditugaskan --</option>
                 {nurses.map((n) => (
                   <option key={n.id} value={n.id}>
-                    {n.name} ({n.role === 'ADMIN' ? 'Admin' : 'Staff'})
+                    {n.name} ({n.role === 'ADMIN' ? 'Admin' : n.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})
                   </option>
                 ))}
               </select>
+
+              {/* Dynamic feedback messages */}
+              {selectedUserRole === 'TECHNICIAN' && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#d97706', fontWeight: 600 }}>
+                  🔧 Teknisi dipilih. Status tempat tidur akan otomatis diubah menjadi "Perawatan/Perbaikan". (Form nama pasien disembunyikan)
+                </div>
+              )}
+              {selectedUserRole && (selectedUserRole === 'STAFF' || selectedUserRole === 'ADMIN') && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#059669', fontWeight: 600 }}>
+                  👤 Perawat/Staff dipilih. Status tempat tidur akan otomatis diubah menjadi "Terisi / Pasien". (Form nama pasien wajib diisi)
+                </div>
+              )}
             </div>
 
             {selectedNurseId && (
@@ -313,11 +413,11 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Catatan Tugas</label>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Catatan Jadwal</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Misal: Shift Pagi, Pendampingan Khusus"
+                    placeholder={selectedUserRole === 'TECHNICIAN' ? 'Misal: Kalibrasi sensor, Ganti filter dialisat' : 'Misal: Shift Pagi, Pendampingan Khusus'}
                     style={{ padding: '6px 8px', fontSize: 12 }}
                     value={scheduleNotes}
                     onChange={(e) => setScheduleNotes(e.target.value)}
@@ -330,7 +430,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
             {detailedBed.nurseSchedules && detailedBed.nurseSchedules.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Jadwal Tugas Aktif & Terbaru
+                  Riwayat & Penugasan Terbaru
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {detailedBed.nurseSchedules.map((ns) => {
@@ -339,8 +439,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                     const startFormatted = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                     const endFormatted = new Date(ns.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                     
-                    // Check if active right now
-                    const now = new Date();
                     const isActive = now >= new Date(ns.startTime) && now <= new Date(ns.endTime);
 
                     return (
@@ -359,6 +457,9 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {ns.nurse.name}
+                            <span className={`badge badge-${ns.nurse.role === 'TECHNICIAN' ? 'maintenance' : ns.nurse.role === 'ADMIN' ? 'admin' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
+                              {ns.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}
+                            </span>
                             {isActive && (
                               <span style={{ background: '#dcfce7', color: '#15803d', fontSize: 9, padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
                                 Aktif
