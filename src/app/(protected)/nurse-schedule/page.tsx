@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 
 interface Nurse {
   id: string;
@@ -298,18 +299,15 @@ export default function NurseSchedulePage() {
 
   const displayedSchedules = activeTab === 'ongoing' ? ongoingSchedules : historySchedules;
 
-  const handleExportCSV = () => {
+  const handleExportXLSX = () => {
     const listToExport = displayedSchedules;
     if (listToExport.length === 0) {
       alert(`Tidak ada data ${activeTab === 'ongoing' ? 'ongoing' : 'riwayat'} untuk diekspor.`);
       return;
     }
 
-    // Set up table columns and header
-    const headers = ['Tanggal', 'Lantai', 'Seksi', 'Bed', 'Nama Pengguna', 'Role', 'Jam Mulai', 'Jam Selesai', 'Catatan'];
-    
-    // Process rows
-    const rows = listToExport.map((s) => {
+    // Map data to custom object keys for cleaner Excel column headers
+    const data = listToExport.map((s) => {
       const startDate = new Date(s.startTime);
       const endDate = new Date(s.endTime);
       
@@ -318,36 +316,29 @@ export default function NurseSchedulePage() {
       const endTimeStr = endDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
       const roleStr = s.nurse.role === 'ADMIN' ? 'Admin' : s.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff';
 
-      return [
-        dateStr,
-        `Lantai ${s.bed.floor}`,
-        s.bed.section,
-        s.bed.bedCode,
-        s.nurse.name,
-        roleStr,
-        startTimeStr,
-        endTimeStr,
-        s.notes || '-',
-      ];
+      return {
+        'Tanggal': dateStr,
+        'Lantai': `Lantai ${s.bed.floor}`,
+        'Seksi': s.bed.section,
+        'Bed': s.bed.bedCode,
+        'Nama Pengguna': s.nurse.name,
+        'Role': roleStr,
+        'Jam Mulai': startTimeStr,
+        'Jam Selesai': endTimeStr,
+        'Catatan': s.notes || '-',
+      };
     });
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((r) => r.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(',')),
-    ].join('\r\n');
-
-    // UTF-8 BOM so Excel opens it correctly
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
+    // Create worksheet and workbook using XLSX
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
     
+    const tabName = activeTab === 'ongoing' ? 'On Going' : 'History';
+    XLSX.utils.book_append_sheet(workbook, worksheet, tabName);
+
+    // Save workbook with true .xlsx extension
     const fileNameSuffix = activeTab === 'ongoing' ? 'Ongoing' : 'Riwayat_Selesai';
-    link.setAttribute('download', `Jadwal_Tugas_Perawat_${fileNameSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    XLSX.writeFile(workbook, `Jadwal_Tugas_Perawat_${fileNameSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   return (
@@ -358,11 +349,11 @@ export default function NurseSchedulePage() {
           <div className="topbar-date">Klinik Utama Jakarta Kidney Center</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary btn-sm" onClick={handleExportCSV}>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportXLSX}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Ekspor {activeTab === 'ongoing' ? 'On-Going' : 'Riwayat'} ke Excel
+            Ekspor {activeTab === 'ongoing' ? 'On-Going' : 'Riwayat'} ke Excel (.xlsx)
           </button>
           <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
