@@ -15,6 +15,13 @@ interface Bed {
     machineCode: string;
     status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE';
   } | null;
+  nurseSchedules?: Array<{
+    startTime: string;
+    endTime: string;
+    nurse: {
+      name: string;
+    };
+  }>;
 }
 
 interface BedUnitProps {
@@ -31,12 +38,19 @@ export default function BedUnit({ bed, onClick, showCode = true }: BedUnitProps)
       ? 'bed-occupied'
       : 'bed-maintenance';
 
-  const tooltipText =
+  let tooltipText =
     bed.status === 'OCCUPIED' && bed.patientName
       ? `${bed.bedCode}: ${bed.patientName}`
       : bed.status === 'MAINTENANCE'
       ? `${bed.bedCode}: Dalam Perawatan`
       : `${bed.bedCode}: Tersedia`;
+
+  if (bed.nurseSchedules && bed.nurseSchedules.length > 0) {
+    const activeNs = bed.nurseSchedules[0];
+    const startStr = new Date(activeNs.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const endStr = new Date(activeNs.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    tooltipText += `\nPerawat: ${activeNs.nurse.name} (${startStr} - ${endStr})`;
+  }
 
   return (
     <div

@@ -9,7 +9,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const bed = await prisma.bed.findUnique({
     where: { id: params.id },
-    include: { machine: true },
+    include: { 
+      machine: true,
+      nurseSchedules: {
+        include: {
+          nurse: {
+            select: { id: true, name: true }
+          }
+        },
+        orderBy: { startTime: 'desc' },
+        take: 5
+      }
+    },
   });
 
   if (!bed) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -21,8 +32,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { status, patientName, patientId, notes } = body;
+  const { status, patientName, patientId, notes, nurseSchedule } = body;
 
+  // Update bed information
   const bed = await prisma.bed.update({
     where: { id: params.id },
     data: {
@@ -45,7 +57,40 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     bed.machine = updatedMachine;
   }
 
-  return NextResponse.json(bed);
+  // Create nurse schedule if provided
+  if (nurseSchedule) {
+    const { nurseId, startTime, endTime, notes: scheduleNotes } = nurseSchedule;
+    if (nurseId && startTime && endTime) {
+      await prisma.nurseSchedule.create({
+        data: {
+          bedId: params.id,
+          nurseId,
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          notes: scheduleNotes,
+        }
+      });
+    }
+  }
+
+  // Fetch updated bed with all relations
+  const updatedBed = await prisma.bed.findUnique({
+    where: { id: params.id },
+    include: {
+      machine: true,
+      nurseSchedules: {
+        include: {
+          nurse: {
+            select: { id: true, name: true }
+          }
+        },
+        orderBy: { startTime: 'desc' },
+        take: 5
+      }
+    }
+  });
+
+  return NextResponse.json(updatedBed);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {

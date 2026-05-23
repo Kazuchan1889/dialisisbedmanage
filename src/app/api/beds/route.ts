@@ -9,10 +9,25 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const floor = searchParams.get('floor');
+  const now = new Date();
 
   const beds = await prisma.bed.findMany({
     where: floor ? { floor: parseInt(floor) } : undefined,
-    include: { machine: true },
+    include: { 
+      machine: true,
+      nurseSchedules: {
+        where: {
+          startTime: { lte: now },
+          endTime: { gte: now },
+        },
+        include: {
+          nurse: {
+            select: { id: true, name: true }
+          }
+        },
+        take: 1
+      }
+    },
     orderBy: [{ floor: 'asc' }, { section: 'asc' }, { position: 'asc' }],
   });
 

@@ -6,13 +6,20 @@ import bcrypt from 'bcryptjs';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || (session.user as any).role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const activeOnly = searchParams.get('activeOnly') === 'true';
+
+  const isAdmin = (session.user as any).role === 'ADMIN';
+  
+  // Staff are forced to only see active users. Admins can see all unless activeOnly is specified.
+  const where = (!isAdmin || activeOnly) ? { active: true } : undefined;
 
   const users = await prisma.user.findMany({
+    where,
     select: { id: true, username: true, name: true, role: true, active: true, createdAt: true },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { name: 'asc' },
   });
 
   return NextResponse.json(users);
