@@ -80,6 +80,7 @@ model NurseSchedule {
   nurse     User     @relation(fields: [nurseId], references: [id], onDelete: Cascade)
   startTime DateTime
   endTime   DateTime
+  shift     String   @default("DAY")
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

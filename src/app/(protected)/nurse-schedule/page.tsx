@@ -23,6 +23,7 @@ interface Schedule {
   nurseId: string;
   startTime: string;
   endTime: string;
+  shift: string;
   notes?: string | null;
   createdAt: string;
   nurse: Nurse;
@@ -40,7 +41,8 @@ function ScheduleModal({
   const [nurses, setNurses] = useState<Nurse[]>([]);
   const [selectedBedId, setSelectedBedId] = useState('');
   const [selectedNurseId, setSelectedNurseId] = useState('');
-  const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduleStartDate, setScheduleStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduleEndDate, setScheduleEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleStartTime, setScheduleStartTime] = useState('08:00');
   const [scheduleEndTime, setScheduleEndTime] = useState('14:00');
   const [notes, setNotes] = useState('');
@@ -77,11 +79,42 @@ function ScheduleModal({
     }
 
     try {
-      const startIso = new Date(`${scheduleDate}T${scheduleStartTime}:00`).toISOString();
-      const endIso = new Date(`${scheduleDate}T${scheduleEndTime}:00`).toISOString();
+      const startD = new Date(scheduleStartDate);
+      const endD = new Date(scheduleEndDate);
 
-      if (new Date(startIso) >= new Date(endIso)) {
-        throw new Error('Jam mulai harus lebih awal dari jam selesai.');
+      if (startD > endD) {
+        throw new Error('Tanggal mulai penugasan tidak boleh setelah tanggal selesai.');
+      }
+
+      const dailySchedules = [];
+      const currentD = new Date(startD);
+
+      const startHour = parseInt(scheduleStartTime.split(':')[0], 10);
+      const shiftVal = (startHour >= 6 && startHour < 18) ? 'DAY' : 'NIGHT';
+
+      while (currentD <= endD) {
+        const dateStr = currentD.toISOString().split('T')[0];
+        const startIso = new Date(`${dateStr}T${scheduleStartTime}:00`).toISOString();
+        
+        let endIso = '';
+        if (scheduleStartTime > scheduleEndTime) {
+          // Shift crosses midnight, so end time is on the next day
+          const nextDay = new Date(currentD);
+          nextDay.setDate(nextDay.getDate() + 1);
+          const nextDayStr = nextDay.toISOString().split('T')[0];
+          endIso = new Date(`${nextDayStr}T${scheduleEndTime}:00`).toISOString();
+        } else {
+          endIso = new Date(`${dateStr}T${scheduleEndTime}:00`).toISOString();
+        }
+
+        dailySchedules.push({
+          startTime: startIso,
+          endTime: endIso,
+          shift: shiftVal,
+          notes,
+        });
+
+        currentD.setDate(currentD.getDate() + 1);
       }
 
       const res = await fetch('/api/nurse-schedules', {
@@ -90,9 +123,8 @@ function ScheduleModal({
         body: JSON.stringify({
           bedId: selectedBedId,
           nurseId: selectedNurseId,
-          startTime: startIso,
-          endTime: endIso,
           notes,
+          schedules: dailySchedules,
         }),
       });
 
@@ -178,18 +210,31 @@ function ScheduleModal({
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 12 }}>
-              <div className="form-group">
-                <label className="form-label">Tanggal *</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tgl Mulai *</label>
                 <input
                   type="date"
                   className="form-input"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
+                  value={scheduleStartDate}
+                  onChange={(e) => setScheduleStartDate(e.target.value)}
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tgl Selesai *</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={scheduleEndDate}
+                  onChange={(e) => setScheduleEndDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Jam Mulai *</label>
                 <input
                   type="time"
@@ -199,7 +244,7 @@ function ScheduleModal({
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Jam Selesai *</label>
                 <input
                   type="time"
@@ -209,6 +254,22 @@ function ScheduleModal({
                   required
                 />
               </div>
+            </div>
+
+            {/* Shift detected display */}
+            <div style={{
+              marginBottom: 16, padding: '8px 12px', borderRadius: 8,
+              background: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#ecfdf5' : '#eff6ff',
+              border: `1.5px solid ${(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#10b981' : '#3b82f6'}`,
+              fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
+            }}>
+              <span>Shift Terdeteksi:</span>
+              <span style={{
+                color: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#047857' : '#1d4ed8',
+                fontWeight: 700
+              }}>
+                {(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? 'Siang (DAY) ☀️' : 'Malam (NIGHT) 🌙'}
+              </span>
             </div>
 
             <div className="form-group">
@@ -323,6 +384,7 @@ export default function NurseSchedulePage() {
         'Bed': s.bed.bedCode,
         'Nama Pengguna': s.nurse.name,
         'Role': roleStr,
+        'Shift': s.shift === 'NIGHT' ? 'Malam (Night)' : 'Siang (Day)',
         'Jam Mulai': startTimeStr,
         'Jam Selesai': endTimeStr,
         'Catatan': s.notes || '-',
@@ -510,6 +572,7 @@ export default function NurseSchedulePage() {
                     <th>Role</th>
                     <th>Bed / Lokasi</th>
                     <th>Tanggal Tugas</th>
+                    <th>Shift</th>
                     <th>Jam Kerja</th>
                     <th>Status</th>
                     <th>Catatan</th>
@@ -568,6 +631,18 @@ export default function NurseSchedulePage() {
                           </td>
                           <td style={{ fontSize: 12, color: '#334155' }}>
                             {dateStr}
+                          </td>
+                          <td>
+                            <span style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              borderRadius: 4,
+                              background: item.shift === 'NIGHT' ? '#e0f2fe' : '#dcfce7',
+                              color: item.shift === 'NIGHT' ? '#0369a1' : '#15803d'
+                            }}>
+                              {item.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'}
+                            </span>
                           </td>
                           <td style={{ fontSize: 12, color: '#334155', fontWeight: 600 }}>
                             ⏰ {startTimeStr} - {endTimeStr}

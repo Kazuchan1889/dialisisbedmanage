@@ -56,7 +56,8 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   const [detailedBed, setDetailedBed] = useState<Bed>(bed);
   const [nurses, setNurses] = useState<any[]>([]);
   const [selectedNurseId, setSelectedNurseId] = useState('');
-  const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduleStartDate, setScheduleStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduleEndDate, setScheduleEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleStartTime, setScheduleStartTime] = useState('08:00');
   const [scheduleEndTime, setScheduleEndTime] = useState('14:00');
   const [scheduleNotes, setScheduleNotes] = useState('');
@@ -101,19 +102,46 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
 
       // Add nurse schedule if selected
       if (selectedNurseId) {
-        const startIso = new Date(`${scheduleDate}T${scheduleStartTime}:00`).toISOString();
-        const endIso = new Date(`${scheduleDate}T${scheduleEndTime}:00`).toISOString();
+        const startD = new Date(scheduleStartDate);
+        const endD = new Date(scheduleEndDate);
 
-        if (new Date(startIso) >= new Date(endIso)) {
-          throw new Error('Jam mulai harus lebih awal dari jam selesai.');
+        if (startD > endD) {
+          throw new Error('Tanggal mulai penugasan tidak boleh setelah tanggal selesai.');
         }
 
-        payload.nurseSchedule = {
-          nurseId: selectedNurseId,
-          startTime: startIso,
-          endTime: endIso,
-          notes: scheduleNotes,
-        };
+        const dailySchedules = [];
+        const currentD = new Date(startD);
+
+        const startHour = parseInt(scheduleStartTime.split(':')[0], 10);
+        const shiftVal = (startHour >= 6 && startHour < 18) ? 'DAY' : 'NIGHT';
+
+        while (currentD <= endD) {
+          const dateStr = currentD.toISOString().split('T')[0];
+          const startIso = new Date(`${dateStr}T${scheduleStartTime}:00`).toISOString();
+          
+          let endIso = '';
+          if (scheduleStartTime > scheduleEndTime) {
+            // Shift crosses midnight, so end time is on the next day
+            const nextDay = new Date(currentD);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const nextDayStr = nextDay.toISOString().split('T')[0];
+            endIso = new Date(`${nextDayStr}T${scheduleEndTime}:00`).toISOString();
+          } else {
+            endIso = new Date(`${dateStr}T${scheduleEndTime}:00`).toISOString();
+          }
+
+          dailySchedules.push({
+            nurseId: selectedNurseId,
+            startTime: startIso,
+            endTime: endIso,
+            shift: shiftVal,
+            notes: scheduleNotes,
+          });
+
+          currentD.setDate(currentD.getDate() + 1);
+        }
+
+        payload.nurseSchedules = dailySchedules;
       }
 
       const res = await fetch(`/api/beds/${bed.id}`, {
@@ -361,17 +389,30 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
 
             {selectedNurseId && (
               <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tanggal</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tgl Mulai</label>
                     <input
                       type="date"
                       className="form-input"
                       style={{ padding: '6px 8px', fontSize: 12 }}
-                      value={scheduleDate}
-                      onChange={(e) => setScheduleDate(e.target.value)}
+                      value={scheduleStartDate}
+                      onChange={(e) => setScheduleStartDate(e.target.value)}
                     />
                   </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tgl Selesai</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      style={{ padding: '6px 8px', fontSize: 12 }}
+                      value={scheduleEndDate}
+                      onChange={(e) => setScheduleEndDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
                     <input
@@ -393,6 +434,23 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                     />
                   </div>
                 </div>
+
+                {/* Shift detected display */}
+                <div style={{
+                  marginBottom: 10, padding: '6px 10px', borderRadius: 6,
+                  background: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#ecfdf5' : '#eff6ff',
+                  border: `1.5px solid ${(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#10b981' : '#3b82f6'}`,
+                  fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
+                }}>
+                  <span>Shift Terdeteksi:</span>
+                  <span style={{
+                    color: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#047857' : '#1d4ed8',
+                    fontWeight: 700
+                  }}>
+                    {(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? 'Siang (DAY) ☀️' : 'Malam (NIGHT) 🌙'}
+                  </span>
+                </div>
+
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Catatan Jadwal</label>
                   <input
@@ -440,6 +498,17 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                             {ns.nurse.name}
                             <span className={`badge badge-${ns.nurse.role === 'TECHNICIAN' ? 'maintenance' : ns.nurse.role === 'ADMIN' ? 'admin' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
                               {ns.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}
+                            </span>
+                            <span style={{
+                              fontSize: 9,
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: ns.shift === 'NIGHT' ? '#e0f2fe' : '#dcfce7',
+                              color: ns.shift === 'NIGHT' ? '#0369a1' : '#15803d',
+                              marginRight: 6
+                            }}>
+                              {ns.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'}
                             </span>
                             {isActive && (
                               <span style={{ background: '#dcfce7', color: '#15803d', fontSize: 9, padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>

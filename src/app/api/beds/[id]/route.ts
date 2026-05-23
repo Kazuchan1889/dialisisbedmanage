@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       nurseSchedules: {
         include: {
           nurse: {
-            select: { id: true, name: true }
+            select: { id: true, name: true, role: true }
           }
         },
         orderBy: { startTime: 'desc' },
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { status, patientName, patientId, notes, nurseSchedule, unassignActiveSchedule } = body;
+  const { status, patientName, patientId, notes, nurseSchedule, nurseSchedules, unassignActiveSchedule } = body;
 
   // Update bed information
   const bed = await prisma.bed.update({
@@ -72,9 +72,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
   }
 
-  // Create nurse schedule if provided
-  if (nurseSchedule) {
-    const { nurseId, startTime, endTime, notes: scheduleNotes } = nurseSchedule;
+  // Create nurse schedules if provided (batch array)
+  if (nurseSchedules && Array.isArray(nurseSchedules)) {
+    for (const ns of nurseSchedules) {
+      const { nurseId, startTime, endTime, shift, notes: scheduleNotes } = ns;
+      if (nurseId && startTime && endTime) {
+        await prisma.nurseSchedule.create({
+          data: {
+            bedId: params.id,
+            nurseId,
+            startTime: new Date(startTime),
+            endTime: new Date(endTime),
+            shift: shift || 'DAY',
+            notes: scheduleNotes,
+          }
+        });
+      }
+    }
+  } else if (nurseSchedule) {
+    // Single nurse schedule fallback
+    const { nurseId, startTime, endTime, shift, notes: scheduleNotes } = nurseSchedule;
     if (nurseId && startTime && endTime) {
       await prisma.nurseSchedule.create({
         data: {
@@ -82,6 +99,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           nurseId,
           startTime: new Date(startTime),
           endTime: new Date(endTime),
+          shift: shift || 'DAY',
           notes: scheduleNotes,
         }
       });
@@ -96,7 +114,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       nurseSchedules: {
         include: {
           nurse: {
-            select: { id: true, name: true }
+            select: { id: true, name: true, role: true }
           }
         },
         orderBy: { startTime: 'desc' },

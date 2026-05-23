@@ -74,7 +74,53 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { bedId, nurseId, startTime, endTime, notes } = body;
+    const { bedId, nurseId, startTime, endTime, notes, schedules } = body;
+
+    // Check if it's a batch creation
+    if (schedules && Array.isArray(schedules)) {
+      const createdSchedules = [];
+      const now = new Date();
+      let updatedBedStatus = null;
+
+      for (const item of schedules) {
+        const { startTime: itemStart, endTime: itemEnd, shift: itemShift, notes: itemNotes } = item;
+        const start = new Date(itemStart);
+        const end = new Date(itemEnd);
+
+        if (start >= end) {
+          continue;
+        }
+
+        const schedule = await prisma.nurseSchedule.create({
+          data: {
+            bedId,
+            nurseId,
+            startTime: start,
+            endTime: end,
+            shift: itemShift || 'DAY',
+            notes: itemNotes || notes,
+          }
+        });
+        createdSchedules.push(schedule);
+
+        if (now >= start && now <= end) {
+          // Fetch user role
+          const user = await prisma.user.findUnique({ where: { id: nurseId } });
+          if (user) {
+            updatedBedStatus = user.role === 'TECHNICIAN' ? 'MAINTENANCE' : 'OCCUPIED';
+          }
+        }
+      }
+
+      if (updatedBedStatus) {
+        await prisma.bed.update({
+          where: { id: bedId },
+          data: { status: updatedBedStatus }
+        });
+      }
+
+      return NextResponse.json(createdSchedules, { status: 201 });
+    }
 
     if (!bedId || !nurseId || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -96,12 +142,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Determine shift if not provided
+    let shiftVal = body.shift;
+    if (!shiftVal) {
+      const localHour = start.getUTCHours() + 7;
+      const hour = localHour % 24;
+      shiftVal = (hour >= 6 && hour < 18) ? 'DAY' : 'NIGHT';
+    }
+
     const schedule = await prisma.nurseSchedule.create({
       data: {
         bedId,
         nurseId,
         startTime: start,
         endTime: end,
+        shift: shiftVal,
         notes,
       },
       include: {

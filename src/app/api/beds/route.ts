@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         },
         include: {
           nurse: {
-            select: { id: true, name: true }
+            select: { id: true, name: true, role: true }
           }
         },
         take: 1
