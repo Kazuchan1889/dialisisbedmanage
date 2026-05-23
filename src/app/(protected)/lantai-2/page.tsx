@@ -226,9 +226,8 @@ export default function Lantai2Page() {
                   {/* Top part of Section C (6 beds) */}
                   <div style={{ flex: 1, paddingBottom: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 1</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px 10px' }}>
-                      {B('L2-C1')}{B('L2-C2')}{B('L2-C3')}
-                      {B('L2-C4')}{B('L2-C5')}{B('L2-C6')}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px 10px' }}>
+                      {B('L2-C1')}{B('L2-C2')}{B('L2-C3')}{B('L2-C4')}{B('L2-C5')}{B('L2-C6')}
                     </div>
                   </div>
 
@@ -238,9 +237,8 @@ export default function Lantai2Page() {
                   {/* Bottom part of Section C (7 beds) */}
                   <div style={{ flex: 1, paddingTop: 8 }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>Bagian 2 (Sekat)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px 10px' }}>
-                      {B('L2-C7')}{B('L2-C8')}{B('L2-C9')}{B('L2-C10')}
-                      {B('L2-C11')}{B('L2-C12')}{B('L2-C13')}<div style={{ width: 72, height: 22 }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px 10px' }}>
+                      {B('L2-C7')}{B('L2-C8')}{B('L2-C9')}{B('L2-C10')}{B('L2-C11')}{B('L2-C12')}{B('L2-C13')}
                     </div>
                   </div>
 
