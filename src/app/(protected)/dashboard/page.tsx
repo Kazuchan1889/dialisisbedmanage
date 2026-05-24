@@ -156,7 +156,7 @@ export default function DashboardPage() {
       <div className="page-container">
         {/* Page Header */}
         <div className="page-header">
-          <h1 className="page-title">bed Sistem</h1>
+          <h1 className="page-title">Bed Management System</h1>
           <p className="page-subtitle">Klinik Utama Jakarta Kidney Center — Manajemen Bed & Mesin Dialisis</p>
         </div>
 

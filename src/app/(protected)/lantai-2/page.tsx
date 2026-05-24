@@ -176,7 +176,7 @@ export default function Lantai2Page() {
               
               {/* Section A - Left of Nurse Room (4 Beds) */}
               <div className="bed-section" style={{ width: 190, padding: 12 }}>
-                <div className="bed-section-label">Seksi A (4 Bed)</div>
+                <div className="bed-section-label">KALIKS ROOM (4 Bed)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-A1')}{B('L2-A2')}
                   {B('L2-A3')}{B('L2-A4')}
@@ -208,7 +208,7 @@ export default function Lantai2Page() {
 
               {/* Section B - Under Section A (7 Beds) */}
               <div className="bed-section" style={{ width: 190, padding: 12 }}>
-                <div className="bed-section-label">Seksi B (7 Bed)</div>
+                <div className="bed-section-label">KORTEKS ROOM (7 Bed)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-B1')}{B('L2-B2')}
                   {B('L2-B3')}{B('L2-B4')}
@@ -219,7 +219,7 @@ export default function Lantai2Page() {
 
               {/* Section C - Center, Right of Section B (13 Beds, divided with partition) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div className="bed-section-label">Seksi C (13 Bed)</div>
+                <div className="bed-section-label">MEDULA ROOM (13 Bed)</div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'space-between' }}>
                   
@@ -249,7 +249,7 @@ export default function Lantai2Page() {
 
               {/* Section D - Right of Section C (7 Beds) */}
               <div className="bed-section" style={{ width: 190, padding: 12 }}>
-                <div className="bed-section-label">Seksi D (7 Bed)</div>
+                <div className="bed-section-label">PAPILA ROOM (7 Bed)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
                   {B('L2-D1')}{B('L2-D2')}
                   {B('L2-D3')}{B('L2-D4')}
