@@ -8,6 +8,7 @@ interface NurseSchedule {
   startTime: string;
   endTime: string;
   notes?: string | null;
+  shift: string;
   nurse: {
     name: string;
     role: string;
@@ -44,18 +45,33 @@ const statusLabels = {
   MAINTENANCE: 'Perawatan / Perbaikan',
 };
 
+function getNotesWithoutPrefix(notes: string | null | undefined): string {
+  if (!notes) return '';
+  if (notes.startsWith('[REPAIRED]')) {
+    return notes.replace('[REPAIRED]', '').trim();
+  }
+  return notes;
+}
+
 export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
-  const [status, setStatus] = useState(bed.status);
   const [patientName, setPatientName] = useState(bed.patientName || '');
   const [patientId, setPatientId] = useState(bed.patientId || '');
   const [notes, setNotes] = useState(bed.notes || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Detailed bed details (includes recent schedules) and nurse list
+  // Detailed bed details (includes recent schedules), nurse list, patient list, and machine list
   const [detailedBed, setDetailedBed] = useState<Bed>(bed);
   const [nurses, setNurses] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [machines, setMachines] = useState<any[]>([]);
+  
+  // Selection States
+  const [selectedPatientMr, setSelectedPatientMr] = useState(bed.patientId || '');
+  const [selectedMachineId, setSelectedMachineId] = useState(bed.machine?.id || '');
   const [selectedNurseId, setSelectedNurseId] = useState('');
+
+  // Schedule States
   const [scheduleStartDate, setScheduleStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleEndDate, setScheduleEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleStartTime, setScheduleStartTime] = useState('08:00');
@@ -66,13 +82,30 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     // Fetch detailed bed with recent schedules
     fetch(`/api/beds/${bed.id}`)
       .then((res) => res.json())
-      .then((data) => setDetailedBed(data))
+      .then((data) => {
+        setDetailedBed(data);
+        if (data.machine) {
+          setSelectedMachineId(data.machine.id);
+        }
+      })
       .catch(console.error);
 
-    // Fetch active nurses (staff, technician, admin)
+    // Fetch active users (staff, technician, admin)
     fetch('/api/users?activeOnly=true')
       .then((res) => res.json())
       .then((data) => setNurses(data))
+      .catch(console.error);
+
+    // Fetch patients list
+    fetch('/api/patients?limit=9999')
+      .then((res) => res.json())
+      .then((data) => setPatients(data.patients || []))
+      .catch(console.error);
+
+    // Fetch machines list
+    fetch('/api/machines?limit=9999')
+      .then((res) => res.json())
+      .then((data) => setMachines(data.machines || []))
       .catch(console.error);
   }, [bed.id]);
 
@@ -82,23 +115,63 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     return now >= new Date(ns.startTime) && now <= new Date(ns.endTime);
   });
 
-  const handleNurseSelect = (id: string) => {
-    setSelectedNurseId(id);
-    const user = nurses.find((n) => n.id === id);
-    if (user) {
-      if (user.role === 'TECHNICIAN') {
-        setStatus('MAINTENANCE');
-      } else if (user.role === 'STAFF' || user.role === 'ADMIN') {
-        setStatus('OCCUPIED');
+  const handlePatientSelect = (mrNumber: string) => {
+    setSelectedPatientMr(mrNumber);
+    if (mrNumber === 'MAINTENANCE') {
+      setPatientName('Perbaikan / Perawatan');
+      setPatientId('MAINTENANCE');
+      setNotes('Perawatan rutin mesin/bed');
+    } else {
+      const pat = patients.find((p) => p.mrNumber === mrNumber);
+      if (pat) {
+        setPatientName(pat.name);
+        setPatientId(pat.mrNumber);
+      } else {
+        setPatientName('');
+        setPatientId('');
+        setNotes('');
       }
     }
   };
 
   const handleSave = async () => {
+    // Validation based on sequential flow
+    if (!selectedPatientMr) {
+      setError('Langkah 1: Silakan pilih pasien terlebih dahulu.');
+      return;
+    }
+    if (notes.trim().length === 0) {
+      setError('Langkah 2: Silakan isi catatan terlebih dahulu.');
+      return;
+    }
+    if (!selectedNurseId && !activeSchedule) {
+      setError('Langkah 3: Silakan tentukan penugasan dan jadwal terlebih dahulu.');
+      return;
+    }
+    if (!selectedMachineId) {
+      setError('Langkah 4: Silakan hubungkan mesin dialysis terlebih dahulu.');
+      return;
+    }
+
     setSaving(true);
     setError('');
+
     try {
-      const payload: any = { status, patientName, patientId, notes };
+      // Map status automatically based on patient selection
+      let computedStatus: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' = 'AVAILABLE';
+      if (selectedPatientMr === 'MAINTENANCE') {
+        computedStatus = 'MAINTENANCE';
+      } else if (selectedPatientMr) {
+        computedStatus = 'OCCUPIED';
+      }
+
+      const payload: any = {
+        status: computedStatus,
+        patientName: selectedPatientMr === 'MAINTENANCE' ? null : patientName,
+        patientId: selectedPatientMr === 'MAINTENANCE' ? null : patientId,
+        notes,
+        machineId: selectedMachineId,
+      };
 
       // Add nurse schedule if selected
       if (selectedNurseId) {
@@ -121,7 +194,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
           
           let endIso = '';
           if (scheduleStartTime > scheduleEndTime) {
-            // Shift crosses midnight, so end time is on the next day
+            // Shift crosses midnight
             const nextDay = new Date(currentD);
             nextDay.setDate(nextDay.getDate() + 1);
             const nextDayStr = nextDay.toISOString().split('T')[0];
@@ -152,7 +225,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || 'Gagal menyimpan');
+        throw new Error(errData.error || 'Gagal menyimpan data bed');
       }
 
       const updated = await res.json();
@@ -166,6 +239,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   };
 
   const handleUnassign = async () => {
+    if (!confirm('Apakah Anda yakin ingin mengosongkan bed ini? Tindakan ini akan melepas pasien, penugasan aktif, dan koneksi mesin.')) return;
     setSaving(true);
     setError('');
     try {
@@ -175,6 +249,10 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
         body: JSON.stringify({
           status: 'AVAILABLE',
           unassignActiveSchedule: true,
+          machineId: null,
+          patientName: null,
+          patientId: null,
+          notes: '',
         }),
       });
 
@@ -211,26 +289,103 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     }
   };
 
+  // Determine Machine ready state
+  const isMachineReady = (m: any) => {
+    const hasRepairedPrefix = m.notes && m.notes.startsWith('[REPAIRED]');
+    const isAvailable = m.status === 'AVAILABLE';
+    return isAvailable && !hasRepairedPrefix;
+  };
+
+  // Filter machines: same floor, and (is currently linked to this bed OR (is ready AND unassigned))
+  const selectableMachines = machines.filter((m) => {
+    const isSameFloor = m.floor === bed.floor;
+    const isCurrentlyLinkedToThisBed = m.bedId === bed.id;
+    const isUnassignedAndReady = !m.bedId && isMachineReady(m);
+    return isSameFloor && (isCurrentlyLinkedToThisBed || isUnassignedAndReady);
+  });
+
+  // Filter patient list to show tags
+  const getPatientLabel = (p: any) => {
+    let tag = '';
+    if (p.dead) tag = ' [💀 Dead]';
+    else if (p.travelling) tag = ' [✈️ Travelling]';
+    else if (p.moved) tag = ' [📦 Moved]';
+    return `${p.name} (${p.mrNumber})${tag}`;
+  };
+
+  // Filter nurses depending on clinical or maintenance mode
+  const selectableNurses = selectedPatientMr === 'MAINTENANCE'
+    ? nurses.filter((n) => n.role === 'TECHNICIAN')
+    : nurses;
+
+  // Step locks logic
+  const step1Unlocked = true;
+  const step2Unlocked = selectedPatientMr !== '';
+  const step3Unlocked = step2Unlocked && notes.trim().length > 0;
+  const step4Unlocked = step3Unlocked && (selectedNurseId !== '' || activeSchedule !== undefined);
+
+  // Unified computed status visual
+  let displayStatus: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' = 'AVAILABLE';
+  if (selectedPatientMr === 'MAINTENANCE') {
+    displayStatus = 'MAINTENANCE';
+  } else if (selectedPatientMr) {
+    displayStatus = 'OCCUPIED';
+  } else if (activeSchedule?.nurse.role === 'TECHNICIAN') {
+    displayStatus = 'MAINTENANCE';
+  }
+
   const statusColors = {
     AVAILABLE: { bg: '#ecfdf5', color: '#059669', border: '#6ee7b7' },
     OCCUPIED: { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' },
     MAINTENANCE: { bg: '#fffbeb', color: '#d97706', border: '#fcd34d' },
   };
 
-  const sc = statusColors[status];
-  const selectedUser = nurses.find((n) => n.id === selectedNurseId);
-  const selectedUserRole = selectedUser?.role;
+  const sc = statusColors[displayStatus];
+
+  const stepStyle = (unlocked: boolean) => ({
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '16px',
+    marginBottom: '16px',
+    boxShadow: unlocked ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
+    opacity: unlocked ? 1 : 0.5,
+    pointerEvents: (unlocked ? 'auto' : 'none') as any,
+    transition: 'all 0.2s ease-in-out',
+  });
+
+  const stepHeaderStyle = (unlocked: boolean) => ({
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginBottom: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  });
+
+  const stepBadgeStyle = (unlocked: boolean) => ({
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    background: unlocked ? '#1e6fa6' : '#94a3b8',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '11px',
+    fontWeight: 700,
+  });
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 500, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="modal" style={{ maxWidth: 520, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div className="modal-header">
           <div>
             <div className="modal-title">Tempat Tidur {bed.bedCode}</div>
             <div className="modal-subtitle">
-              Lantai {bed.floor} — Seksi {bed.section}
-              {bed.machine && ` · Mesin ${bed.machine.machineCode}`}
+              Lantai {bed.floor} — Seksi {bed.section} — Pos {bed.position}
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
@@ -244,151 +399,162 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
         <div className="modal-body" style={{ overflowY: 'auto', flex: 1, paddingRight: 8 }}>
           {error && <div className="error-alert" style={{ marginBottom: 16 }}>{error}</div>}
 
-          {/* Current status visual */}
+          {/* Reset / Empty Bed Section */}
+          {(bed.patientId || activeSchedule || bed.machine) && (
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px',
+              padding: '12px 16px', marginBottom: '16px'
+            }}>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b' }}>
+                  Atur Ulang / Kosongkan Bed
+                </div>
+                <div style={{ fontSize: '11px', color: '#7f1d1d', marginTop: '2px' }}>
+                  Lepas pasien, jadwal penugasan, dan mesin terhubung dari bed ini.
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                style={{
+                  background: '#ef4444', color: 'white', padding: '6px 12px',
+                  fontSize: '11px', fontWeight: 600, border: 'none', borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+                onClick={handleUnassign}
+                disabled={saving}
+              >
+                Kosongkan Bed
+              </button>
+            </div>
+          )}
+
+          {/* Computed status visual */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16,
             padding: '10px 14px', borderRadius: 10,
             background: sc.bg, border: `1.5px solid ${sc.border}`,
           }}>
-            <div style={{ width: 48, height: 24, borderRadius: 5, background: sc.bg, border: `2px solid ${sc.border}` }} />
+            <div style={{ width: 40, height: 20, borderRadius: 4, background: sc.bg, border: `2px solid ${sc.border}` }} />
             <div>
-              <div style={{ fontSize: 11, color: sc.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Status Saat Ini
+              <div style={{ fontSize: 10, color: sc.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Status Bed Hasil Pengisian
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: sc.color }}>
-                {statusLabels[status]}
+                {statusLabels[displayStatus]}
               </div>
             </div>
           </div>
 
-
-          {/* Patient fields - only shown when occupied (and not selected a technician) */}
-          {status === 'OCCUPIED' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Pasien</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Nama pasien"
-                  value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
-                  required={status === 'OCCUPIED'}
-                />
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">No. Rekam Medis</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: RM-0012"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                />
-              </div>
+          {/* STEP 1: PILIH PASIEN */}
+          <div style={stepStyle(step1Unlocked)}>
+            <div style={stepHeaderStyle(step1Unlocked)}>
+              <div style={stepBadgeStyle(step1Unlocked)}>1</div>
+              <span>👥 Pilih Pasien</span>
             </div>
-          )}
-
-          {/* Notes */}
-          <div className="form-group">
-            <label className="form-label">
-              {status === 'MAINTENANCE' ? 'Catatan Kerusakan/Perbaikan (opsional)' : 'Catatan Bed (opsional)'}
-            </label>
-            <textarea
-              className="form-textarea"
-              placeholder={status === 'MAINTENANCE' ? 'Jelaskan detail kerusakan atau perbaikan...' : 'Tambahkan catatan...'}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-            />
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Pasien Dialysis *</label>
+              <select
+                className="form-select"
+                value={selectedPatientMr}
+                onChange={(e) => handlePatientSelect(e.target.value)}
+              >
+                <option value="">-- Pilih Pasien --</option>
+                <option value="MAINTENANCE">-- 🔧 Perawatan / Perbaikan (Tanpa Pasien) --</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.mrNumber}>
+                    {getPatientLabel(p)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* Machine info */}
-          {bed.machine && (
-            <div style={{
-              background: '#f8fafc', border: '1px solid #e2e8f0',
-              borderRadius: 10, padding: '10px 14px', marginBottom: 20
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Info Mesin Terkoneksi
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#1a2332' }}>
-                  {bed.machine.machineCode}
-                </span>
-                <span className={`badge badge-${bed.machine.status === 'AVAILABLE' ? 'available' : bed.machine.status === 'IN_USE' ? 'occupied' : 'maintenance'}`}>
-                  {bed.machine.status === 'AVAILABLE' ? 'Tersedia' : bed.machine.status === 'IN_USE' ? 'Digunakan' : 'Perawatan'}
-                </span>
-              </div>
+          {/* STEP 2: CATATAN PASIEN */}
+          <div style={stepStyle(step2Unlocked)}>
+            <div style={stepHeaderStyle(step2Unlocked)}>
+              <div style={stepBadgeStyle(step2Unlocked)}>2</div>
+              <span>📝 Catatan Pasien</span>
+              {!step2Unlocked && (
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, marginLeft: 'auto' }}>🔒 Terkunci</span>
+              )}
             </div>
-          )}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">
+                {selectedPatientMr === 'MAINTENANCE' ? 'Catatan Kerusakan/Perbaikan *' : 'Catatan Pasien/Bed *'}
+              </label>
+              <textarea
+                className="form-textarea"
+                placeholder={selectedPatientMr === 'MAINTENANCE' ? 'Jelaskan detail perbaikan/kalibrasi...' : 'Tambahkan catatan pasien dialisis...'}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                disabled={!step2Unlocked}
+                required={step2Unlocked}
+                rows={2}
+              />
+            </div>
+          </div>
 
-          {/* NURSE & TECHNICIAN ASSIGNMENT SECTION */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16, marginTop: 16 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>
-              🏥 Penugasan Tugas & Jadwal
-            </h3>
+          {/* STEP 3: PENUGASAN & JADWAL */}
+          <div style={stepStyle(step3Unlocked)}>
+            <div style={stepHeaderStyle(step3Unlocked)}>
+              <div style={stepBadgeStyle(step3Unlocked)}>3</div>
+              <span>📅 Penugasan & Jadwal</span>
+              {!step3Unlocked && (
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, marginLeft: 'auto' }}>🔒 Terkunci</span>
+              )}
+            </div>
 
-            {/* UN-ASSIGN BUTTON (Shown if there's an active schedule) */}
+            {/* Active scheduled details */}
             {activeSchedule && (
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8,
-                padding: '12px 14px', marginBottom: 16
+                padding: '10px 12px', marginBottom: 12
               }}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: 6 }}>
                     {activeSchedule.nurse.name}
-                    <span className={`badge badge-${activeSchedule.nurse.role === 'TECHNICIAN' ? 'maintenance' : activeSchedule.nurse.role === 'ADMIN' ? 'admin' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
+                    <span className={`badge badge-${activeSchedule.nurse.role === 'TECHNICIAN' ? 'maintenance' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
                       {activeSchedule.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: '#1e40af', marginTop: 2 }}>
-                    ⏰ {new Date(activeSchedule.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSchedule.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                  <div style={{ fontSize: 10, color: '#1e40af', marginTop: 2 }}>
+                    ⏰ {new Date(activeSchedule.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSchedule.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} ({activeSchedule.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'})
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="btn btn-danger btn-sm"
-                  style={{ background: '#ef4444', color: 'white', padding: '6px 12px', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 6, cursor: 'pointer' }}
-                  onClick={handleUnassign}
-                  disabled={saving}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: 10, padding: '4px 8px' }}
+                  onClick={() => handleDeleteSchedule(activeSchedule.id)}
                 >
-                  Lepas Penugasan (Un-assign)
+                  Hapus
                 </button>
               </div>
             )}
-            
-            <div className="form-group">
-              <label className="form-label">Tugaskan Pengguna Baru</label>
+
+            <div className="form-group" style={{ marginBottom: selectedNurseId ? 12 : 0 }}>
+              <label className="form-label">Tugaskan Pengguna Baru *</label>
               <select
                 className="form-select"
                 value={selectedNurseId}
-                onChange={(e) => handleNurseSelect(e.target.value)}
+                onChange={(e) => setSelectedNurseId(e.target.value)}
+                disabled={!step3Unlocked}
+                required={step3Unlocked && !activeSchedule}
               >
-                <option value="">-- Pilih Pengguna untuk Ditugaskan --</option>
-                {nurses.map((n) => (
+                <option value="">-- Pilih Pengguna --</option>
+                {selectableNurses.map((n) => (
                   <option key={n.id} value={n.id}>
                     {n.name} ({n.role === 'ADMIN' ? 'Admin' : n.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})
                   </option>
                 ))}
               </select>
-
-              {/* Dynamic feedback messages */}
-              {selectedUserRole === 'TECHNICIAN' && (
-                <div style={{ marginTop: 8, fontSize: 12, color: '#d97706', fontWeight: 600 }}>
-                  🔧 Teknisi dipilih. Status tempat tidur akan otomatis diubah menjadi "Perawatan/Perbaikan". (Form nama pasien disembunyikan)
-                </div>
-              )}
-              {selectedUserRole && (selectedUserRole === 'STAFF' || selectedUserRole === 'ADMIN') && (
-                <div style={{ marginTop: 8, fontSize: 12, color: '#059669', fontWeight: 600 }}>
-                  👤 Perawat/Staff dipilih. Status tempat tidur akan otomatis diubah menjadi "Terisi / Pasien". (Form nama pasien wajib diisi)
-                </div>
-              )}
             </div>
 
             {selectedNurseId && (
-              <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, padding: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Tgl Mulai</label>
@@ -456,7 +622,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder={selectedUserRole === 'TECHNICIAN' ? 'Misal: Kalibrasi sensor, Ganti filter dialisat' : 'Misal: Shift Pagi, Pendampingan Khusus'}
+                    placeholder="Misal: Pendampingan, Shift Siang"
                     style={{ padding: '6px 8px', fontSize: 12 }}
                     value={scheduleNotes}
                     onChange={(e) => setScheduleNotes(e.target.value)}
@@ -464,92 +630,40 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 </div>
               </div>
             )}
+          </div>
 
-            {/* List of recent schedules */}
-            {detailedBed.nurseSchedules && detailedBed.nurseSchedules.length > 0 && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Riwayat & Penugasan Terbaru
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {detailedBed.nurseSchedules.map((ns) => {
-                    const dateObj = new Date(ns.startTime);
-                    const dateFormatted = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
-                    const startFormatted = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                    const endFormatted = new Date(ns.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                    
-                    const isActive = now >= new Date(ns.startTime) && now <= new Date(ns.endTime);
+          {/* STEP 4: HUBUNGKAN MESIN DIALYSIS */}
+          <div style={stepStyle(step4Unlocked)}>
+            <div style={stepHeaderStyle(step4Unlocked)}>
+              <div style={stepBadgeStyle(step4Unlocked)}>4</div>
+              <span>🔌 Hubungkan Mesin Dialysis</span>
+              {!step4Unlocked && (
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500, marginLeft: 'auto' }}>🔒 Terkunci</span>
+              )}
+            </div>
 
-                    return (
-                      <div
-                        key={ns.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '8px 12px',
-                          borderRadius: 8,
-                          background: isActive ? '#f0fdf4' : '#ffffff',
-                          border: `1px solid ${isActive ? '#bbf7d0' : '#e2e8f0'}`,
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {ns.nurse.name}
-                            <span className={`badge badge-${ns.nurse.role === 'TECHNICIAN' ? 'maintenance' : ns.nurse.role === 'ADMIN' ? 'admin' : 'staff'}`} style={{ fontSize: 8, padding: '1px 4px' }}>
-                              {ns.nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}
-                            </span>
-                            <span style={{
-                              fontSize: 9,
-                              fontWeight: 700,
-                              padding: '2px 6px',
-                              borderRadius: 4,
-                              background: ns.shift === 'NIGHT' ? '#e0f2fe' : '#dcfce7',
-                              color: ns.shift === 'NIGHT' ? '#0369a1' : '#15803d',
-                              marginRight: 6
-                            }}>
-                              {ns.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'}
-                            </span>
-                            {isActive && (
-                              <span style={{ background: '#dcfce7', color: '#15803d', fontSize: 9, padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
-                                Aktif
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                            📅 {dateFormatted} · ⏰ {startFormatted} - {endFormatted}
-                          </div>
-                          {ns.notes && (
-                            <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic', marginTop: 1 }}>
-                              Note: {ns.notes}
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleDeleteSchedule(ns.id)}
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#94a3b8',
-                            cursor: 'pointer',
-                            padding: 4,
-                            borderRadius: 4,
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
-                          title="Hapus Penugasan"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                    );
-                  })}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Pilih Mesin Dialysis *</label>
+              <select
+                className="form-select"
+                value={selectedMachineId}
+                onChange={(e) => setSelectedMachineId(e.target.value)}
+                disabled={!step4Unlocked}
+                required={step4Unlocked}
+              >
+                <option value="">-- Pilih Mesin --</option>
+                {selectableMachines.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.machineCode} (Lantai {m.floor} - {m.notes ? getNotesWithoutPrefix(m.notes) : 'Ready'})
+                  </option>
+                ))}
+              </select>
+              {selectableMachines.length === 0 && step4Unlocked && (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#ef4444' }}>
+                  ⚠️ Tidak ada mesin berstatus READY yang tersedia di Lantai {bed.floor}.
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
@@ -558,7 +672,11 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
           <button className="btn btn-secondary" onClick={onClose} disabled={saving}>
             Batal
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={saving || !step4Unlocked || !selectedMachineId}
+          >
             {saving ? (
               <><span className="spinner" style={{ width: 14, height: 14 }} /> Menyimpan...</>
             ) : (

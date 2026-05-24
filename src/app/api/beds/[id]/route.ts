@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { status, patientName, patientId, notes, nurseSchedule, nurseSchedules, unassignActiveSchedule } = body;
+  const { status, patientName, patientId, notes, nurseSchedule, nurseSchedules, unassignActiveSchedule, machineId } = body;
 
   // Update bed information
   const bed = await prisma.bed.update({
@@ -46,15 +46,39 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     include: { machine: true },
   });
 
-  // Update machine status accordingly
-  if (status && bed.machine) {
+  // Handle machine association/disassociation
+  if (machineId !== undefined) {
+    const currentMachine = bed.machine;
+    
+    if (currentMachine && currentMachine.id !== machineId) {
+      // Disconnect current machine
+      await prisma.machine.update({
+        where: { id: currentMachine.id },
+        data: { bedId: null, status: 'AVAILABLE' }
+      });
+    }
+
+    if (machineId) {
+      // Connect new machine
+      const targetMachineStatus =
+        status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
+        
+      await prisma.machine.update({
+        where: { id: machineId },
+        data: {
+          bedId: params.id,
+          status: targetMachineStatus,
+        }
+      });
+    }
+  } else if (status && bed.machine) {
+    // Update current machine status if status changed but machineId wasn't updated
     const machineStatus =
       status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
-    const updatedMachine = await prisma.machine.update({
+    await prisma.machine.update({
       where: { id: bed.machine.id },
       data: { status: machineStatus },
     });
-    bed.machine = updatedMachine;
   }
 
   // End active schedules if unassign is requested
