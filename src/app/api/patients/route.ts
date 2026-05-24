@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, initialAssessment, dateOfBirth, nik, jknNumber, mrNumber, dead, travelling, moved } = body;
+    const { title, name, initialAssessment, dateOfBirth, nik, jknNumber, mrNumber, dead, travelling, moved } = body;
 
     if (!name || !dateOfBirth || !mrNumber) {
       return NextResponse.json({ error: 'Nama, Tanggal Lahir, dan No. MR wajib diisi' }, { status: 400 });
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
 
     const patient = await prisma.patient.create({
       data: {
+        title: title || null,
         name,
         initialAssessment,
         dateOfBirth: new Date(dateOfBirth),

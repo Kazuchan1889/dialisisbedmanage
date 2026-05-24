@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 
 interface Patient {
   id: string;
+  title?: string | null;
   name: string;
   initialAssessment?: string | null;
   dateOfBirth: string;
@@ -18,6 +19,7 @@ interface Patient {
 }
 
 interface PatientFormData {
+  title: string;
   name: string;
   initialAssessment: string;
   dateOfBirth: string;
@@ -38,6 +40,7 @@ function PatientModal({
 }) {
   const isEdit = !!patient;
   const [form, setForm] = useState<PatientFormData>({
+    title: patient?.title || '',
     name: patient?.name || '',
     initialAssessment: patient?.initialAssessment || '',
     dateOfBirth: patient?.dateOfBirth ? patient.dateOfBirth.split('T')[0] : '',
@@ -59,6 +62,7 @@ function PatientModal({
       const method = isEdit ? 'PATCH' : 'POST';
 
       const body = {
+        title: form.title || null,
         name: form.name,
         initialAssessment: form.initialAssessment || null,
         dateOfBirth: form.dateOfBirth,
@@ -116,16 +120,32 @@ function PatientModal({
           <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             {error && <div className="error-alert">{error}</div>}
 
-            <div className="form-group">
-              <label className="form-label">Nama Pasien *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Nama lengkap pasien"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+              <div className="form-group">
+                <label className="form-label">Title</label>
+                <select
+                  className="form-input"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                >
+                  <option value="">-- Pilih --</option>
+                  <option value="Mr">Mr</option>
+                  <option value="Mrs">Mrs</option>
+                  <option value="Tn">Tn</option>
+                  <option value="Ny">Ny</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Nama Pasien *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Nama lengkap pasien"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -486,7 +506,9 @@ export default function PatientManagementPage() {
                             }}>
                               {patient.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
                             </div>
-                            <div style={{ fontWeight: 600, fontSize: 13 }}>{patient.name}</div>
+                            <div style={{ fontWeight: 600, fontSize: 13 }}>
+                              {patient.title ? `${patient.title}. ` : ''}{patient.name}
+                            </div>
                           </div>
                         </td>
                         <td style={{ fontSize: 12, color: '#475569', fontStyle: 'italic', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={patient.initialAssessment || ''}>

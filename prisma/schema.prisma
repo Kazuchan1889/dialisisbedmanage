@@ -12,6 +12,8 @@ enum Role {
   ADMIN
   STAFF
   TECHNICIAN
+  SUPERVISOR
+  MANAGEMENT
 }
 
 enum BedStatus {
@@ -90,6 +92,7 @@ model NurseSchedule {
 
 model Patient {
   id                String    @id @default(cuid())
+  title             String?
   name              String
   initialAssessment String?
   dateOfBirth       DateTime

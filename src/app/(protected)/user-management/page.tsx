@@ -7,7 +7,7 @@ interface User {
   id: string;
   username: string;
   name: string;
-  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN';
+  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN' | 'SUPERVISOR' | 'MANAGEMENT';
   active: boolean;
   createdAt: string;
 }
@@ -15,7 +15,7 @@ interface User {
 interface UserFormData {
   username: string;
   name: string;
-  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN';
+  role: 'ADMIN' | 'STAFF' | 'TECHNICIAN' | 'SUPERVISOR' | 'MANAGEMENT';
   password: string;
 }
 
@@ -125,6 +125,8 @@ function UserModal({
               >
                 <option value="STAFF">Staff / Perawat</option>
                 <option value="TECHNICIAN">Technician / Teknisi</option>
+                <option value="SUPERVISOR">Supervisor</option>
+                <option value="MANAGEMENT">Management</option>
                 <option value="ADMIN">Administrator</option>
               </select>
             </div>
@@ -334,6 +336,10 @@ export default function UserManagementPage() {
                                 ? 'linear-gradient(135deg, #6366f1, #818cf8)'
                                 : user.role === 'TECHNICIAN'
                                 ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
+                                : user.role === 'SUPERVISOR'
+                                ? 'linear-gradient(135deg, #10b981, #34d399)'
+                                : user.role === 'MANAGEMENT'
+                                ? 'linear-gradient(135deg, #06b6d4, #22d3ee)'
                                 : 'linear-gradient(135deg, #1e6fa6, #2d8fd6)',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: 11, fontWeight: 700, color: 'white',
@@ -357,8 +363,8 @@ export default function UserManagementPage() {
                           </code>
                         </td>
                         <td>
-                          <span className={`badge badge-${user.role === 'ADMIN' ? 'admin' : user.role === 'TECHNICIAN' ? 'maintenance' : 'staff'}`}>
-                            {user.role === 'ADMIN' ? '🛡️ Admin' : user.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Staff'}
+                          <span className={`badge badge-${user.role === 'ADMIN' ? 'admin' : user.role === 'TECHNICIAN' ? 'maintenance' : user.role === 'SUPERVISOR' ? 'active' : user.role === 'MANAGEMENT' ? 'staff' : 'staff'}`}>
+                            {user.role === 'ADMIN' ? '🛡️ Admin' : user.role === 'TECHNICIAN' ? '🔧 Teknisi' : user.role === 'SUPERVISOR' ? '📋 Supervisor' : user.role === 'MANAGEMENT' ? '📈 Management' : '👤 Staff'}
                           </span>
                         </td>
                         <td>

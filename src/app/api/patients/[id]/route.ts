@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   try {
     const body = await req.json();
-    const { name, initialAssessment, dateOfBirth, nik, jknNumber, mrNumber, dead, travelling, moved } = body;
+    const { title, name, initialAssessment, dateOfBirth, nik, jknNumber, mrNumber, dead, travelling, moved } = body;
 
     // Check mutual exclusivity of dead, travelling, moved (at most one is true)
     let activeFlags = 0;
@@ -36,6 +36,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const updated = await prisma.patient.update({
       where: { id: params.id },
       data: {
+        ...(title !== undefined && { title: title || null }),
         ...(name !== undefined && { name }),
         ...(initialAssessment !== undefined && { initialAssessment }),
         ...(dateOfBirth !== undefined && { dateOfBirth: new Date(dateOfBirth) }),
