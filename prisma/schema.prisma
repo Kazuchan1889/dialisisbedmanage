@@ -87,3 +87,20 @@ model NurseSchedule {
 
   @@map("nurse_schedules")
 }
+
+model Patient {
+  id                String    @id @default(cuid())
+  name              String
+  initialAssessment String?
+  dateOfBirth       DateTime
+  nik               String?
+  jknNumber         String?
+  mrNumber          String    @unique
+  dead              Boolean   @default(false)
+  travelling        Boolean   @default(false)
+  moved             Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("patients")
+}
