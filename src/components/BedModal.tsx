@@ -135,24 +135,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   };
 
   const handleSave = async () => {
-    // Validation based on sequential flow
-    if (!selectedPatientMr) {
-      setError('Langkah 1: Silakan pilih pasien terlebih dahulu.');
-      return;
-    }
-    if (notes.trim().length === 0) {
-      setError('Langkah 2: Silakan isi catatan terlebih dahulu.');
-      return;
-    }
-    if (!selectedNurseId && !activeSchedule) {
-      setError('Langkah 3: Silakan tentukan penugasan dan jadwal terlebih dahulu.');
-      return;
-    }
-    if (!selectedMachineId) {
-      setError('Langkah 4: Silakan hubungkan mesin dialysis terlebih dahulu.');
-      return;
-    }
-
     setSaving(true);
     setError('');
 
@@ -318,11 +300,11 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     ? nurses.filter((n) => n.role === 'TECHNICIAN')
     : nurses;
 
-  // Step locks logic
+  // Step locks logic - all fields unlocked as requested by user
   const step1Unlocked = true;
-  const step2Unlocked = selectedPatientMr !== '';
-  const step3Unlocked = step2Unlocked && notes.trim().length > 0;
-  const step4Unlocked = step3Unlocked && (selectedNurseId !== '' || activeSchedule !== undefined);
+  const step2Unlocked = true;
+  const step3Unlocked = true;
+  const step4Unlocked = true;
 
   // Unified computed status visual
   let displayStatus: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' = 'AVAILABLE';
@@ -490,7 +472,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={!step2Unlocked}
-                required={step2Unlocked}
                 rows={2}
               />
             </div>
@@ -542,7 +523,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 value={selectedNurseId}
                 onChange={(e) => setSelectedNurseId(e.target.value)}
                 disabled={!step3Unlocked}
-                required={step3Unlocked && !activeSchedule}
               >
                 <option value="">-- Pilih Pengguna --</option>
                 {selectableNurses.map((n) => (
@@ -649,7 +629,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 value={selectedMachineId}
                 onChange={(e) => setSelectedMachineId(e.target.value)}
                 disabled={!step4Unlocked}
-                required={step4Unlocked}
               >
                 <option value="">-- Pilih Mesin --</option>
                 {selectableMachines.map((m) => (
@@ -675,7 +654,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
           <button
             className="btn btn-primary"
             onClick={handleSave}
-            disabled={saving || !step4Unlocked || !selectedMachineId}
+            disabled={saving}
           >
             {saving ? (
               <><span className="spinner" style={{ width: 14, height: 14 }} /> Menyimpan...</>
