@@ -167,29 +167,7 @@ export default function Lantai3Page() {
 
           <div style={{ minWidth: 720 }}>
             {/* ===== TOP ROW: 3 clinical rooms ===== */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-              <div style={{
-                flex: 1, minHeight: 60, border: '1.5px solid #e2e8f0',
-                borderRadius: 8, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#64748b', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
-              }}>
-                Ruang Tindakan
-              </div>
-              <div style={{
-                flex: 1, minHeight: 60, border: '1.5px solid #e2e8f0',
-                borderRadius: 8, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#64748b', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
-              }}>
-                Ruang Utilitas
-              </div>
-              <div style={{
-                flex: 1, minHeight: 60, border: '1.5px solid #e2e8f0',
-                borderRadius: 8, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#64748b', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
-              }}>
-                Ruang Staf
-              </div>
-            </div>
+            
 
             {/* ===== MIDDLE BED ROWS (3 SECTIONS) ===== */}
             <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 20 }}>
