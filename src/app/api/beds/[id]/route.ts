@@ -101,13 +101,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     for (const ns of nurseSchedules) {
       const { nurseId, startTime, endTime, shift, notes: scheduleNotes } = ns;
       if (nurseId && startTime && endTime) {
+        const start = new Date(startTime);
+        let shiftVal = shift;
+        if (!shiftVal) {
+          const localHour = (start.getUTCHours() + 7) % 24;
+          const localMinute = start.getUTCMinutes();
+          const totalMins = localHour * 60 + localMinute;
+          if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+            shiftVal = 'MORNING';
+          } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+            shiftVal = 'DAY';
+          } else {
+            shiftVal = 'NIGHT';
+          }
+        }
         await prisma.nurseSchedule.create({
           data: {
             bedId: params.id,
             nurseId,
-            startTime: new Date(startTime),
+            startTime: start,
             endTime: new Date(endTime),
-            shift: shift || 'DAY',
+            shift: shiftVal,
             notes: scheduleNotes,
           }
         });
@@ -117,13 +131,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // Single nurse schedule fallback
     const { nurseId, startTime, endTime, shift, notes: scheduleNotes } = nurseSchedule;
     if (nurseId && startTime && endTime) {
+      const start = new Date(startTime);
+      let shiftVal = shift;
+      if (!shiftVal) {
+        const localHour = (start.getUTCHours() + 7) % 24;
+        const localMinute = start.getUTCMinutes();
+        const totalMins = localHour * 60 + localMinute;
+        if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+          shiftVal = 'MORNING';
+        } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+          shiftVal = 'DAY';
+        } else {
+          shiftVal = 'NIGHT';
+        }
+      }
       await prisma.nurseSchedule.create({
         data: {
           bedId: params.id,
           nurseId,
-          startTime: new Date(startTime),
+          startTime: start,
           endTime: new Date(endTime),
-          shift: shift || 'DAY',
+          shift: shiftVal,
           notes: scheduleNotes,
         }
       });

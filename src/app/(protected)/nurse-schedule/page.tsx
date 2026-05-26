@@ -89,8 +89,17 @@ function ScheduleModal({
       const dailySchedules = [];
       const currentD = new Date(startD);
 
-      const startHour = parseInt(scheduleStartTime.split(':')[0], 10);
-      const shiftVal = (startHour >= 6 && startHour < 18) ? 'DAY' : 'NIGHT';
+      const [shHourStr, shMinStr] = scheduleStartTime.split(':');
+      const shHour = parseInt(shHourStr, 10);
+      const shMin = parseInt(shMinStr, 10);
+      const shTotalMins = shHour * 60 + shMin;
+
+      let shiftVal = 'NIGHT';
+      if (shTotalMins >= (6 * 60 + 30) && shTotalMins <= (12 * 60)) {
+        shiftVal = 'MORNING';
+      } else if (shTotalMins >= (12 * 60 + 30) && shTotalMins <= (17 * 60 + 30)) {
+        shiftVal = 'DAY';
+      }
 
       while (currentD <= endD) {
         const dateStr = currentD.toISOString().split('T')[0];
@@ -257,20 +266,43 @@ function ScheduleModal({
             </div>
 
             {/* Shift detected display */}
-            <div style={{
-              marginBottom: 16, padding: '8px 12px', borderRadius: 8,
-              background: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#ecfdf5' : '#eff6ff',
-              border: `1.5px solid ${(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#10b981' : '#3b82f6'}`,
-              fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
-            }}>
-              <span>Shift Terdeteksi:</span>
-              <span style={{
-                color: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#047857' : '#1d4ed8',
-                fontWeight: 700
-              }}>
-                {(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? 'Siang (DAY) ☀️' : 'Malam (NIGHT) 🌙'}
-              </span>
-            </div>
+            {(() => {
+              const [shHourStr, shMinStr] = scheduleStartTime.split(':');
+              const shHour = parseInt(shHourStr, 10);
+              const shMin = parseInt(shMinStr, 10);
+              const shTotalMins = shHour * 60 + shMin;
+              
+              let detectedShiftText = 'Malam (NIGHT) 🌙';
+              let shiftBg = '#eff6ff';
+              let shiftBorder = '#3b82f6';
+              let shiftColor = '#1d4ed8';
+              
+              if (shTotalMins >= (6 * 60 + 30) && shTotalMins <= (12 * 60)) {
+                detectedShiftText = 'Pagi (MORNING) 🌅';
+                shiftBg = '#fef3c7';
+                shiftBorder = '#fbbf24';
+                shiftColor = '#d97706';
+              } else if (shTotalMins >= (12 * 60 + 30) && shTotalMins <= (17 * 60 + 30)) {
+                detectedShiftText = 'Siang (DAY) ☀️';
+                shiftBg = '#ecfdf5';
+                shiftBorder = '#10b981';
+                shiftColor = '#047857';
+              }
+
+              return (
+                <div style={{
+                  marginBottom: 16, padding: '8px 12px', borderRadius: 8,
+                  background: shiftBg,
+                  border: `1.5px solid ${shiftBorder}`,
+                  fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
+                }}>
+                  <span>Shift Terdeteksi:</span>
+                  <span style={{ color: shiftColor, fontWeight: 700 }}>
+                    {detectedShiftText}
+                  </span>
+                </div>
+              );
+            })()}
 
             <div className="form-group">
               <label className="form-label">Catatan Tugas (opsional)</label>
@@ -384,7 +416,7 @@ export default function NurseSchedulePage() {
         'Bed': s.bed.bedCode,
         'Nama Pengguna': s.nurse.name,
         'Role': roleStr,
-        'Shift': s.shift === 'NIGHT' ? 'Malam (Night)' : 'Siang (Day)',
+        'Shift': s.shift === 'MORNING' ? 'Pagi (Morning)' : s.shift === 'DAY' ? 'Siang (Day)' : 'Malam (Night)',
         'Jam Mulai': startTimeStr,
         'Jam Selesai': endTimeStr,
         'Catatan': s.notes || '-',
@@ -633,17 +665,35 @@ export default function NurseSchedulePage() {
                             {dateStr}
                           </td>
                           <td>
-                            <span style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              padding: '3px 8px',
-                              borderRadius: 4,
-                              background: item.shift === 'NIGHT' ? '#e0f2fe' : '#dcfce7',
-                              color: item.shift === 'NIGHT' ? '#0369a1' : '#15803d'
-                            }}>
-                              {item.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'}
-                            </span>
-                          </td>
+                             {(() => {
+                               let badgeText = 'Malam 🌙';
+                               let badgeBg = '#e0f2fe';
+                               let badgeColor = '#0369a1';
+                               
+                               if (item.shift === 'MORNING') {
+                                 badgeText = 'Pagi 🌅';
+                                 badgeBg = '#fef3c7';
+                                 badgeColor = '#d97706';
+                               } else if (item.shift === 'DAY') {
+                                 badgeText = 'Siang ☀️';
+                                 badgeBg = '#dcfce7';
+                                 badgeColor = '#15803d';
+                               }
+                               
+                               return (
+                                 <span style={{
+                                   fontSize: 11,
+                                   fontWeight: 700,
+                                   padding: '3px 8px',
+                                   borderRadius: 4,
+                                   background: badgeBg,
+                                   color: badgeColor
+                                 }}>
+                                   {badgeText}
+                                 </span>
+                               );
+                             })()}
+                           </td>
                           <td style={{ fontSize: 12, color: '#334155', fontWeight: 600 }}>
                             ⏰ {startTimeStr} - {endTimeStr}
                           </td>

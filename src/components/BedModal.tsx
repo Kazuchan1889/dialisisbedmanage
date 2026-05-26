@@ -167,8 +167,17 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
         const dailySchedules = [];
         const currentD = new Date(startD);
 
-        const startHour = parseInt(scheduleStartTime.split(':')[0], 10);
-        const shiftVal = (startHour >= 6 && startHour < 18) ? 'DAY' : 'NIGHT';
+        const [shHourStr, shMinStr] = scheduleStartTime.split(':');
+        const shHour = parseInt(shHourStr, 10);
+        const shMin = parseInt(shMinStr, 10);
+        const shTotalMins = shHour * 60 + shMin;
+
+        let shiftVal = 'NIGHT';
+        if (shTotalMins >= (6 * 60 + 30) && shTotalMins <= (12 * 60)) {
+          shiftVal = 'MORNING';
+        } else if (shTotalMins >= (12 * 60 + 30) && shTotalMins <= (17 * 60 + 30)) {
+          shiftVal = 'DAY';
+        }
 
         while (currentD <= endD) {
           const dateStr = currentD.toISOString().split('T')[0];
@@ -502,7 +511,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                     </span>
                   </div>
                   <div style={{ fontSize: 10, color: '#1e40af', marginTop: 2 }}>
-                    ⏰ {new Date(activeSchedule.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSchedule.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} ({activeSchedule.shift === 'NIGHT' ? 'Malam 🌙' : 'Siang ☀️'})
+                    ⏰ {new Date(activeSchedule.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSchedule.endTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} ({activeSchedule.shift === 'MORNING' ? 'Pagi 🌅' : activeSchedule.shift === 'DAY' ? 'Siang ☀️' : 'Malam 🌙'})
                   </div>
                 </div>
                 <button
@@ -582,20 +591,43 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 </div>
 
                 {/* Shift detected display */}
-                <div style={{
-                  marginBottom: 10, padding: '6px 10px', borderRadius: 6,
-                  background: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#ecfdf5' : '#eff6ff',
-                  border: `1.5px solid ${(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#10b981' : '#3b82f6'}`,
-                  fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
-                }}>
-                  <span>Shift Terdeteksi:</span>
-                  <span style={{
-                    color: (parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? '#047857' : '#1d4ed8',
-                    fontWeight: 700
-                  }}>
-                    {(parseInt(scheduleStartTime.split(':')[0], 10) >= 6 && parseInt(scheduleStartTime.split(':')[0], 10) < 18) ? 'Siang (DAY) ☀️' : 'Malam (NIGHT) 🌙'}
-                  </span>
-                </div>
+                {(() => {
+                  const [shHourStr, shMinStr] = scheduleStartTime.split(':');
+                  const shHour = parseInt(shHourStr, 10);
+                  const shMin = parseInt(shMinStr, 10);
+                  const shTotalMins = shHour * 60 + shMin;
+                  
+                  let detectedShiftText = 'Malam (NIGHT) 🌙';
+                  let shiftBg = '#eff6ff';
+                  let shiftBorder = '#3b82f6';
+                  let shiftColor = '#1d4ed8';
+                  
+                  if (shTotalMins >= (6 * 60 + 30) && shTotalMins <= (12 * 60)) {
+                    detectedShiftText = 'Pagi (MORNING) 🌅';
+                    shiftBg = '#fef3c7';
+                    shiftBorder = '#fbbf24';
+                    shiftColor = '#d97706';
+                  } else if (shTotalMins >= (12 * 60 + 30) && shTotalMins <= (17 * 60 + 30)) {
+                    detectedShiftText = 'Siang (DAY) ☀️';
+                    shiftBg = '#ecfdf5';
+                    shiftBorder = '#10b981';
+                    shiftColor = '#047857';
+                  }
+
+                  return (
+                    <div style={{
+                      marginBottom: 10, padding: '6px 10px', borderRadius: 6,
+                      background: shiftBg,
+                      border: `1.5px solid ${shiftBorder}`,
+                      fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6
+                    }}>
+                      <span>Shift Terdeteksi:</span>
+                      <span style={{ color: shiftColor, fontWeight: 700 }}>
+                        {detectedShiftText}
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 4 }}>Catatan Jadwal</label>

@@ -91,13 +91,27 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
+        let finalShift = itemShift;
+        if (!finalShift) {
+          const localHour = (start.getUTCHours() + 7) % 24;
+          const localMinute = start.getUTCMinutes();
+          const totalMins = localHour * 60 + localMinute;
+          if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+            finalShift = 'MORNING';
+          } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+            finalShift = 'DAY';
+          } else {
+            finalShift = 'NIGHT';
+          }
+        }
+
         const schedule = await prisma.nurseSchedule.create({
           data: {
             bedId,
             nurseId,
             startTime: start,
             endTime: end,
-            shift: itemShift || 'DAY',
+            shift: finalShift,
             notes: itemNotes || notes,
           }
         });
@@ -145,9 +159,16 @@ export async function POST(req: NextRequest) {
     // Determine shift if not provided
     let shiftVal = body.shift;
     if (!shiftVal) {
-      const localHour = start.getUTCHours() + 7;
-      const hour = localHour % 24;
-      shiftVal = (hour >= 6 && hour < 18) ? 'DAY' : 'NIGHT';
+      const localHour = (start.getUTCHours() + 7) % 24;
+      const localMinute = start.getUTCMinutes();
+      const totalMins = localHour * 60 + localMinute;
+      if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+        shiftVal = 'MORNING';
+      } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+        shiftVal = 'DAY';
+      } else {
+        shiftVal = 'NIGHT';
+      }
     }
 
     const schedule = await prisma.nurseSchedule.create({
