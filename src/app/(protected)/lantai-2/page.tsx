@@ -217,7 +217,7 @@ export default function Lantai2Page() {
                   {/* Bagian 1 — Kiri: T20/T19/T18 | Kanan: T8/T9/T10 */}
                   <div style={{ flex: 1, paddingBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6, textAlign: 'center' }}>Bagian 1</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 80px', justifyItems: 'center', width: 'fit-content' }}>
                       {B('T20')}{B('T8')}
                       {B('T19')}{B('T9')}
                       {B('T18')}{B('T10')}
@@ -230,7 +230,7 @@ export default function Lantai2Page() {
                   {/* Bagian 2 (Sekat) — Kiri: T17/T16/T15 | Kanan: T11/T12/T13/T14 */}
                   <div style={{ flex: 1, paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                     <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6, textAlign: 'center' }}>Bagian 2 (Sekat)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 80px', justifyItems: 'center', width: 'fit-content' }}>
                       {B('T17')}{B('T11')}
                       {B('T16')}{B('T12')}
                       {B('T15')}{B('T13')}

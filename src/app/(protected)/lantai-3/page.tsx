@@ -172,7 +172,7 @@ export default function Lantai3Page() {
               {/* Papila Room — Left (6 beds in 2x3 grid layout) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Papila Room</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
                   {B('B34')}{B('B35')}
                   {B('B33')}{B('B36')}
                   {B('B32')}{B('B37')}
@@ -182,7 +182,7 @@ export default function Lantai3Page() {
               {/* Medula Room — Center (5 beds in 2x3 grid layout) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Medula Room</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
                   {B('T39')}<div style={{ width: 72, height: 22 }} />
                   {B('T40')}{B('T42')}
                   {B('T41')}{B('T43')}
@@ -192,7 +192,7 @@ export default function Lantai3Page() {
               {/* Korteks Room — Right (2 beds in 2x3 grid layout) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Korteks Room</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
                   <div style={{ width: 72, height: 22 }} />{B('T45')}
                   <div style={{ width: 72, height: 22 }} /><div style={{ width: 72, height: 22 }} />
                   {B('A44')}<div style={{ width: 72, height: 22 }} />
