@@ -109,7 +109,7 @@ export default function Lantai2Page() {
           <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
             <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #1e6fa6, #2d8fd6)', width: 38, height: 38 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M2 10h20v10H2zM2 10V6a2 2 0 012-2h16a2 2 0 012 2v4"/>
+                <path d="M2 10h20v10H2zM2 10V6a2 2 0 012-2h16a2 2 0 012 2v4" />
               </svg>
             </div>
             <div>
@@ -120,7 +120,7 @@ export default function Lantai2Page() {
           <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
             <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', width: 38, height: 38 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3"/>
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3" />
               </svg>
             </div>
             <div>
@@ -131,7 +131,7 @@ export default function Lantai2Page() {
           <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
             <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #f87171)', width: 38, height: 38 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/>
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
               </svg>
             </div>
             <div>
@@ -142,7 +142,7 @@ export default function Lantai2Page() {
           <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>
             <div className="stat-card-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', width: 38, height: 38 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" />
               </svg>
             </div>
             <div>
@@ -208,36 +208,175 @@ export default function Lantai2Page() {
                 </div>
               </div>
 
-              {/* MEDULA ROOM (13 Bed) — 2 kolom vertikal, dibagi partition */}
-              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>MEDULA ROOM (13 Bed)</div>
+              {/* MEDULA ROOM (13 Bed) */}
+              <div
+                className="bed-section"
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  position: 'relative',
+                  minHeight: 430,
+                  background: '#f8fafc',
+                  border: '2px solid #3b82f6',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  className="bed-section-label"
+                  style={{
+                    marginBottom: 10,
+                  }}
+                >
+                  MEDULA ROOM (13 BED)
+                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                {/* LEFT SIDE */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: 38,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 14,
+                  }}
+                >
+                  {B('T20')}
+                  {B('T19')}
+                  {B('T18')}
 
-                  {/* Bagian 1 — Kiri: T20/T19/T18 | Kanan: T8/T9/T10 */}
-                  <div style={{ flex: 1, paddingBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6, textAlign: 'center' }}>Bagian 1</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                      {B('T20')}{B('T8')}
-                      {B('T19')}{B('T9')}
-                      {B('T18')}{B('T10')}
-                    </div>
+                  {/* divider space */}
+                  <div
+                    style={{
+                      width: 90,
+                      height: 8,
+                      background: '#ffffff',
+                      borderRadius: 999,
+                      opacity: 0.9,
+                    }}
+                  />
+
+                  {B('T17')}
+                  {B('T16')}
+                  {B('T15')}
+                </div>
+
+                {/* RIGHT SIDE */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: 14,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 14,
+                  }}
+                >
+                  {B('T8')}
+                  {B('T9')}
+                  {B('T10')}
+                  {B('T11')}
+                  {B('T12')}
+                  {B('T13')}
+                  {B('T14')}
+                </div>
+
+                {/* CENTER OBJECTS / WALKWAY */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '48%',
+                    height: '78%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    opacity: 0.22,
+                  }}
+                >
+
+                  {/* TOP BLOCKS */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 110,
+                        height: 80,
+                        background: '#ffffff',
+                        borderRadius: 4,
+                      }}
+                    />
+
+                    <div
+                      style={{
+                        width: 55,
+                        height: 86,
+                        background: '#ffffff',
+                        borderRadius: 4,
+                      }}
+                    />
                   </div>
 
-                  {/* Garis partisi */}
-                  <div style={{ borderTop: '2px dashed #cbd5e1', width: '100%', margin: '4px 0' }} />
+                  {/* BOTTOM BLOCKS */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-end',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 85,
+                        height: 78,
+                        background: '#ffffff',
+                        borderRadius: 4,
+                      }}
+                    />
 
-                  {/* Bagian 2 (Sekat) — Kiri: T17/T16/T15 | Kanan: T11/T12/T13/T14 */}
-                  <div style={{ flex: 1, paddingTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: '#64748b', marginBottom: 6, textAlign: 'center' }}>Bagian 2 (Sekat)</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                      {B('T17')}{B('T11')}
-                      {B('T16')}{B('T12')}
-                      {B('T15')}{B('T13')}
-                      <div style={{ width: 72, height: 22 }} />{B('T14')}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 90,
+                          height: 34,
+                          background: '#ffffff',
+                          borderRadius: 4,
+                        }}
+                      />
+
+                      <div
+                        style={{
+                          width: 90,
+                          height: 34,
+                          background: '#ffffff',
+                          borderRadius: 4,
+                        }}
+                      />
                     </div>
-                  </div>
 
+                    <div
+                      style={{
+                        width: 22,
+                        height: 30,
+                        background: '#ffffff',
+                        borderRadius: 4,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
