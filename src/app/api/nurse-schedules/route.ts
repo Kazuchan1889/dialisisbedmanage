@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { BedStatus } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     if (schedules && Array.isArray(schedules)) {
       const createdSchedules = [];
       const now = new Date();
-      let updatedBedStatus = null;
+      let updatedBedStatus: BedStatus | null = null;
 
       for (const item of schedules) {
         const { startTime: itemStart, endTime: itemEnd, shift: itemShift, notes: itemNotes } = item;

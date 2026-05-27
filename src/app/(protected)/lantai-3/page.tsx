@@ -166,62 +166,57 @@ export default function Lantai3Page() {
           </div>
 
           <div style={{ minWidth: 720 }}>
-            {/* ===== TOP ROW: 3 clinical rooms ===== */}
-            
-
             {/* ===== MIDDLE BED ROWS (3 SECTIONS) ===== */}
-            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 20 }}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', marginBottom: 20 }}>
 
-              {/* Section A — Left (7 beds in 2x4 grid layout) */}
-              <div className="bed-section" style={{ flex: 1 }}>
-                <div className="bed-section-label">Section A</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                  {B('L3-A1')}{B('L3-A2')}
-                  {B('L3-A3')}{B('L3-A4')}
-                  {B('L3-A5')}{B('L3-A6')}
-                  {B('L3-A7')}
+              {/* Papila Room — Left (6 beds in 2x3 grid layout) */}
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Papila Room</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                  {B('B34')}{B('B35')}
+                  {B('B33')}{B('B36')}
+                  {B('B32')}{B('B37')}
                 </div>
               </div>
 
-              {/* Section B — Center (6 beds in 2x3 grid layout) */}
-              <div className="bed-section" style={{ flex: 1 }}>
-                <div className="bed-section-label">Section B</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                  {B('L3-B1')}{B('L3-B2')}
-                  {B('L3-B3')}{B('L3-B4')}
-                  {B('L3-B5')}{B('L3-B6')}
+              {/* Medula Room — Center (5 beds in 2x3 grid layout) */}
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Medula Room</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content' }}>
+                  {B('T39')}<div style={{ width: 72, height: 22 }} />
+                  {B('T40')}{B('T42')}
+                  {B('T41')}{B('T43')}
                 </div>
               </div>
 
-              {/* Section C — Right (7 beds in 2x4 grid layout) */}
-              <div className="bed-section" style={{ flex: 1 }}>
-                <div className="bed-section-label">Section C</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                  {B('L3-C1')}{B('L3-C2')}
-                  {B('L3-C3')}{B('L3-C4')}
-                  {B('L3-C5')}{B('L3-C6')}
-                  {B('L3-C7')}
+              {/* Korteks Room — Right (2 beds in 2x3 grid layout) */}
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Korteks Room</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
+                  <div style={{ width: 72, height: 22 }} />{B('T45')}
+                  <div style={{ width: 72, height: 22 }} /><div style={{ width: 72, height: 22 }} />
+                  {B('A44')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
             </div>
 
             {/* ===== BOTTOM ROW: Doctor Room + Nurse Station ===== */}
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              {/* Doctor Consultation Room — bottom left */}
-              <div className="bed-section" style={{ flex: 1, minHeight: 80 }}>
-                <div className="doctor-room" style={{ height: 80 }}>
-                  <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700 }}>
-                    <div>Doctor</div>
-                    <div>Consultation</div>
-                    <div>Room</div>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+              {/* Doctor Consultation & CAPD Room — bottom left */}
+              <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80 }}>
+                <div className="doctor-room" style={{ width: '100%', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700 }}>
+                    <div style={{ color: '#1e3a8a' }}>Doctor</div>
+                    <div style={{ color: '#1e3a8a' }}><span style={{ color: '#1e3a8a' }}>Consultation & </span><span style={{ color: '#991b1b', fontWeight: 800 }}>CAPD</span></div>
+                    <div style={{ color: '#1e3a8a' }}>Room</div>
                   </div>
                 </div>
               </div>
 
               {/* Nurse Station — bottom center oval */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80 }}>
-                <div className="nurse-station" style={{ width: '100%', height: 80 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>Nurse Station</span>
+                <div className="nurse-station" style={{ width: '100%', height: 80, borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>Nurse Station</span>
                 </div>
               </div>
 
