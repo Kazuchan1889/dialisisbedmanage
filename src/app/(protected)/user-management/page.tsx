@@ -47,8 +47,8 @@ function UserModal({
       const url = isEdit ? `/api/users/${user!.id}` : '/api/users';
       const method = isEdit ? 'PATCH' : 'POST';
 
-      const body: any = { name: form.name, role: form.role };
-      if (!isEdit) { body.username = form.username; body.password = form.password; }
+      const body: any = { username: form.username, name: form.name, role: form.role };
+      if (!isEdit) { body.password = form.password; }
       if (isEdit && form.password) body.password = form.password;
 
       const res = await fetch(url, {
@@ -90,19 +90,17 @@ function UserModal({
           <div className="modal-body">
             {error && <div className="error-alert">{error}</div>}
 
-            {!isEdit && (
-              <div className="form-group">
-                <label className="form-label">Username *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: nurse01"
-                  value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  required
-                />
-              </div>
-            )}
+            <div className="form-group">
+              <label className="form-label">Username *</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Contoh: nurse01"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+              />
+            </div>
 
             <div className="form-group">
               <label className="form-label">Nama Lengkap *</label>

@@ -11,9 +11,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
-  const { name, role, active, password } = body;
+  const { username, name, role, active, password } = body;
 
   const updateData: any = {};
+  if (username !== undefined) {
+    if (!username.trim()) {
+      return NextResponse.json({ error: 'Username cannot be empty' }, { status: 400 });
+    }
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing && existing.id !== params.id) {
+      return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
+    }
+    updateData.username = username;
+  }
   if (name !== undefined) updateData.name = name;
   if (role !== undefined) updateData.role = role;
   if (active !== undefined) updateData.active = active;
