@@ -59,6 +59,8 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   const [notes, setNotes] = useState(bed.notes || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false);
 
   // Detailed bed details (includes recent schedules), nurse list, patient list, and machine list
   const [detailedBed, setDetailedBed] = useState<Bed>(bed);
@@ -108,6 +110,19 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
       .then((data) => setMachines(data.machines || []))
       .catch(console.error);
   }, [bed.id]);
+
+  useEffect(() => {
+    if (patients.length > 0 && selectedPatientMr) {
+      if (selectedPatientMr === 'MAINTENANCE') {
+        setPatientSearch('🔧 Perawatan / Perbaikan (Tanpa Pasien)');
+      } else {
+        const pat = patients.find((p) => p.mrNumber === selectedPatientMr);
+        if (pat) {
+          setPatientSearch(`${pat.name} (${pat.mrNumber})`);
+        }
+      }
+    }
+  }, [patients, selectedPatientMr]);
 
   // Find active schedule (if any)
   const now = new Date();
@@ -295,6 +310,15 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     return isSameFloor && (isCurrentlyLinkedToThisBed || isUnassignedAndReady);
   });
 
+  // Filter patient list based on search query
+  const filteredPatients = patients.filter((p) => {
+    const searchLower = patientSearch.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(searchLower) ||
+      p.mrNumber.toLowerCase().includes(searchLower)
+    );
+  });
+
   // Filter patient list to show tags
   const getPatientLabel = (p: any) => {
     let tag = '';
@@ -444,21 +468,158 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
               <div style={stepBadgeStyle(step1Unlocked)}>1</div>
               <span>👥 Pilih Pasien</span>
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
               <label className="form-label">Pasien Dialysis *</label>
-              <select
-                className="form-select"
-                value={selectedPatientMr}
-                onChange={(e) => handlePatientSelect(e.target.value)}
-              >
-                <option value="">-- Pilih Pasien --</option>
-                <option value="MAINTENANCE">-- 🔧 Perawatan / Perbaikan (Tanpa Pasien) --</option>
-                {patients.map((p) => (
-                  <option key={p.id} value={p.mrNumber}>
-                    {getPatientLabel(p)}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ paddingRight: '36px' }}
+                  placeholder="Cari nama atau nomor RM pasien..."
+                  value={patientSearch}
+                  onChange={(e) => {
+                    setPatientSearch(e.target.value);
+                    setShowPatientSuggestions(true);
+                    if (!e.target.value) {
+                      handlePatientSelect('');
+                    }
+                  }}
+                  onFocus={() => setShowPatientSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowPatientSuggestions(false);
+                      // Snap back to correct full text representation
+                      if (selectedPatientMr) {
+                        if (selectedPatientMr === 'MAINTENANCE') {
+                          setPatientSearch('🔧 Perawatan / Perbaikan (Tanpa Pasien)');
+                        } else {
+                          const pat = patients.find((p) => p.mrNumber === selectedPatientMr);
+                          if (pat) {
+                            setPatientSearch(`${pat.name} (${pat.mrNumber})`);
+                          } else {
+                            setPatientSearch('');
+                          }
+                        }
+                      } else {
+                        setPatientSearch('');
+                      }
+                    }, 200);
+                  }}
+                />
+                {patientSearch && (
+                  <button
+                    type="button"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px',
+                    }}
+                    onClick={() => {
+                      setPatientSearch('');
+                      handlePatientSelect('');
+                      setShowPatientSuggestions(false);
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions Autocomplete Dropdown */}
+              {showPatientSuggestions && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    zIndex: 9999,
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    marginTop: '4px',
+                  }}
+                >
+                  {/* Maintenance Option */}
+                  <div
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: '#d97706',
+                      background: '#fffbeb',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #fcd34d',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    className="hover:bg-amber-100 transition-colors"
+                    onMouseDown={() => {
+                      handlePatientSelect('MAINTENANCE');
+                      setPatientSearch('🔧 Perawatan / Perbaikan (Tanpa Pasien)');
+                      setShowPatientSuggestions(false);
+                    }}
+                  >
+                    <span>🔧 Perawatan / Perbaikan (Tanpa Pasien)</span>
+                  </div>
+
+                  {filteredPatients.length === 0 ? (
+                    <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>
+                      Pasien tidak ditemukan
+                    </div>
+                  ) : (
+                    filteredPatients.map((p) => {
+                      const isSelected = selectedPatientMr === p.mrNumber;
+                      return (
+                        <div
+                          key={p.id}
+                          style={{
+                            padding: '10px 12px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            background: isSelected ? '#eff6ff' : '#ffffff',
+                            borderBottom: '1px solid #f1f5f9',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                          onMouseDown={() => {
+                            handlePatientSelect(p.mrNumber);
+                            setPatientSearch(`${p.name} (${p.mrNumber})`);
+                            setShowPatientSuggestions(false);
+                          }}
+                          className="hover:bg-blue-50 transition-colors"
+                        >
+                          <div>
+                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{p.name}</span>
+                            <span style={{ color: '#64748b', marginLeft: '6px', fontSize: '11px' }}>({p.mrNumber})</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {p.dead && <span style={{ fontSize: '9px', background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>💀 Dead</span>}
+                            {p.travelling && <span style={{ fontSize: '9px', background: '#e0e7ff', color: '#3730a3', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>✈️ Travel</span>}
+                            {p.moved && <span style={{ fontSize: '9px', background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>📦 Moved</span>}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
