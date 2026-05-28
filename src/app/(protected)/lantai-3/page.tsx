@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import BedUnit from '@/components/BedUnit';
+import BedUnit, { isMachineDamagedOrRepaired } from '@/components/BedUnit';
 import BedModal from '@/components/BedModal';
 
 interface Bed {
@@ -50,9 +50,9 @@ export default function Lantai3Page() {
   };
 
   const stats = {
-    available: beds.filter((b) => b.status === 'AVAILABLE').length,
-    occupied: beds.filter((b) => b.status === 'OCCUPIED').length,
-    maintenance: beds.filter((b) => b.status === 'MAINTENANCE').length,
+    available: beds.filter((b) => b.status === 'AVAILABLE' && !isMachineDamagedOrRepaired(b.machine)).length,
+    occupied: beds.filter((b) => b.status === 'OCCUPIED' && !isMachineDamagedOrRepaired(b.machine)).length,
+    maintenance: beds.filter((b) => b.status === 'MAINTENANCE' || isMachineDamagedOrRepaired(b.machine)).length,
   };
 
   if (loading) {

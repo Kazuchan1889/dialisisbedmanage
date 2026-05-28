@@ -14,6 +14,7 @@ interface Bed {
     id: string;
     machineCode: string;
     status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE';
+    notes?: string | null;
   } | null;
   nurseSchedules?: Array<{
     startTime: string;
@@ -30,20 +31,38 @@ interface BedUnitProps {
   showCode?: boolean;
 }
 
+export function isMachineDamagedOrRepaired(machine?: { status: string; notes?: string | null } | null): boolean {
+  if (!machine) return false;
+  if (machine.status === 'MAINTENANCE') return true; // RUSAK
+  if (machine.status === 'AVAILABLE' && machine.notes && machine.notes.startsWith('[REPAIRED]')) {
+    return true; // REPAIRED
+  }
+  return false;
+}
+
 export default function BedUnit({ bed, onClick, showCode = true }: BedUnitProps) {
+  const machineDamagedOrRepaired = isMachineDamagedOrRepaired(bed.machine);
+
   const statusClass =
-    bed.status === 'AVAILABLE'
+    machineDamagedOrRepaired
+      ? 'bed-maintenance'
+      : bed.status === 'AVAILABLE'
       ? 'bed-available'
       : bed.status === 'OCCUPIED'
       ? 'bed-occupied'
       : 'bed-maintenance';
 
-  let tooltipText =
-    bed.status === 'OCCUPIED' && bed.patientName
-      ? `${bed.bedCode}: ${bed.patientName}`
-      : bed.status === 'MAINTENANCE'
-      ? `${bed.bedCode}: Dalam Perawatan`
-      : `${bed.bedCode}: Tersedia`;
+  let tooltipText = '';
+  if (machineDamagedOrRepaired && bed.machine) {
+    const isRusak = bed.machine.status === 'MAINTENANCE';
+    tooltipText = `${bed.bedCode}: Mesin ${bed.machine.machineCode} (${isRusak ? 'Rusak ❌' : 'Repaired 🛠️'})`;
+  } else if (bed.status === 'OCCUPIED' && bed.patientName) {
+    tooltipText = `${bed.bedCode}: ${bed.patientName}`;
+  } else if (bed.status === 'MAINTENANCE') {
+    tooltipText = `${bed.bedCode}: Dalam Perawatan`;
+  } else {
+    tooltipText = `${bed.bedCode}: Tersedia`;
+  }
 
   if (bed.nurseSchedules && bed.nurseSchedules.length > 0) {
     const activeNs = bed.nurseSchedules[0];
