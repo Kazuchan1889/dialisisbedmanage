@@ -104,14 +104,14 @@ html, body {
 }
 
 .sidebar-logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #1e6fa6, #06b6d4);
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 .sidebar-logo-text {
