@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import jkcIcon from '../../../jkc-icon.png';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,11 +43,13 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="login-logo">
           <div className="login-logo-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.15)"/>
-              <path d="M16 7v18M7 16h18" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="16" cy="16" r="5" stroke="white" strokeWidth="2" fill="none"/>
-            </svg>
+            <Image
+              src={jkcIcon}
+              alt="JKC Logo"
+              width={96}
+              height={96}
+              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+            />
           </div>
           <h1 className="login-title">Dialysis Management</h1>
           <p className="login-clinic">Klinik Utama Jakarta Kidney Center</p>

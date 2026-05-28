@@ -395,15 +395,14 @@ html, body {
 }
 
 .login-logo-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #1e6fa6, #06b6d4);
-  border-radius: 18px;
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  box-shadow: 0 8px 24px rgba(30,111,166,0.3);
+  overflow: hidden;
 }
 
 .login-title {
