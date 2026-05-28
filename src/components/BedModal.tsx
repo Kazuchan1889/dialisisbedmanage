@@ -61,6 +61,10 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
   const [error, setError] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [showPatientSuggestions, setShowPatientSuggestions] = useState(false);
+  const [nurseSearch, setNurseSearch] = useState('');
+  const [showNurseSuggestions, setShowNurseSuggestions] = useState(false);
+  const [machineSearch, setMachineSearch] = useState('');
+  const [showMachineSuggestions, setShowMachineSuggestions] = useState(false);
 
   // Detailed bed details (includes recent schedules), nurse list, patient list, and machine list
   const [detailedBed, setDetailedBed] = useState<Bed>(bed);
@@ -123,6 +127,28 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
       }
     }
   }, [patients, selectedPatientMr]);
+
+  useEffect(() => {
+    if (nurses.length > 0 && selectedNurseId) {
+      const nurse = nurses.find((n) => n.id === selectedNurseId);
+      if (nurse) {
+        setNurseSearch(`${nurse.name} (${nurse.role === 'ADMIN' ? 'Admin' : nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})`);
+      }
+    } else {
+      setNurseSearch('');
+    }
+  }, [nurses, selectedNurseId]);
+
+  useEffect(() => {
+    if (machines.length > 0 && selectedMachineId) {
+      const machine = machines.find((m) => m.id === selectedMachineId);
+      if (machine) {
+        setMachineSearch(`${machine.machineCode} (Lantai ${machine.floor})`);
+      }
+    } else {
+      setMachineSearch('');
+    }
+  }, [machines, selectedMachineId]);
 
   // Find active schedule (if any)
   const now = new Date();
@@ -319,6 +345,29 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     );
   });
 
+  // Filter nurses depending on clinical or maintenance mode
+  const selectableNurses = selectedPatientMr === 'MAINTENANCE'
+    ? nurses.filter((n) => n.role === 'TECHNICIAN')
+    : nurses;
+
+  const filteredNurses = selectableNurses.filter((n) => {
+    const searchLower = nurseSearch.toLowerCase();
+    const roleText = n.role === 'ADMIN' ? 'admin' : n.role === 'TECHNICIAN' ? 'teknisi' : 'staff';
+    return (
+      n.name.toLowerCase().includes(searchLower) ||
+      roleText.includes(searchLower)
+    );
+  });
+
+  const filteredMachines = selectableMachines.filter((m) => {
+    const searchLower = machineSearch.toLowerCase();
+    const noteText = m.notes ? m.notes.toLowerCase() : '';
+    return (
+      m.machineCode.toLowerCase().includes(searchLower) ||
+      noteText.includes(searchLower)
+    );
+  });
+
   // Filter patient list to show tags
   const getPatientLabel = (p: any) => {
     let tag = '';
@@ -327,11 +376,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     else if (p.moved) tag = ' [📦 Moved]';
     return `${p.name} (${p.mrNumber})${tag}`;
   };
-
-  // Filter nurses depending on clinical or maintenance mode
-  const selectableNurses = selectedPatientMr === 'MAINTENANCE'
-    ? nurses.filter((n) => n.role === 'TECHNICIAN')
-    : nurses;
 
   // Step locks logic - all fields unlocked as requested by user
   const step1Unlocked = true;
@@ -686,21 +730,129 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
               </div>
             )}
 
-            <div className="form-group" style={{ marginBottom: selectedNurseId ? 12 : 0 }}>
+            <div className="form-group" style={{ marginBottom: selectedNurseId ? 12 : 0, position: 'relative' }}>
               <label className="form-label">Tugaskan Pengguna Baru *</label>
-              <select
-                className="form-select"
-                value={selectedNurseId}
-                onChange={(e) => setSelectedNurseId(e.target.value)}
-                disabled={!step3Unlocked}
-              >
-                <option value="">-- Pilih Pengguna --</option>
-                {selectableNurses.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.name} ({n.role === 'ADMIN' ? 'Admin' : n.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})
-                  </option>
-                ))}
-              </select>
+              <div className="relative" style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ paddingRight: '36px' }}
+                  placeholder="Cari perawat atau teknisi..."
+                  value={nurseSearch}
+                  onChange={(e) => {
+                    setNurseSearch(e.target.value);
+                    setShowNurseSuggestions(true);
+                    if (!e.target.value) {
+                      setSelectedNurseId('');
+                    }
+                  }}
+                  onFocus={() => setShowNurseSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowNurseSuggestions(false);
+                      // Snap back to correct representation
+                      if (selectedNurseId) {
+                        const nurse = nurses.find((n) => n.id === selectedNurseId);
+                        if (nurse) {
+                          setNurseSearch(`${nurse.name} (${nurse.role === 'ADMIN' ? 'Admin' : nurse.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})`);
+                        } else {
+                          setNurseSearch('');
+                        }
+                      } else {
+                        setNurseSearch('');
+                      }
+                    }, 200);
+                  }}
+                  disabled={!step3Unlocked}
+                />
+                {nurseSearch && (
+                  <button
+                    type="button"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px',
+                    }}
+                    onClick={() => {
+                      setNurseSearch('');
+                      setSelectedNurseId('');
+                      setShowNurseSuggestions(false);
+                    }}
+                    disabled={!step3Unlocked}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions Autocomplete Dropdown */}
+              {showNurseSuggestions && step3Unlocked && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    zIndex: 9999,
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    marginTop: '4px',
+                  }}
+                >
+                  {filteredNurses.length === 0 ? (
+                    <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>
+                      Pengguna tidak ditemukan
+                    </div>
+                  ) : (
+                    filteredNurses.map((n) => {
+                      const isSelected = selectedNurseId === n.id;
+                      return (
+                        <div
+                          key={n.id}
+                          style={{
+                            padding: '10px 12px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            background: isSelected ? '#eff6ff' : '#ffffff',
+                            borderBottom: '1px solid #f1f5f9',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                          onMouseDown={() => {
+                            setSelectedNurseId(n.id);
+                            setNurseSearch(`${n.name} (${n.role === 'ADMIN' ? 'Admin' : n.role === 'TECHNICIAN' ? 'Teknisi' : 'Staff'})`);
+                            setShowNurseSuggestions(false);
+                          }}
+                          className="hover:bg-blue-50 transition-colors"
+                        >
+                          <div>
+                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{n.name}</span>
+                          </div>
+                          <span className={`badge badge-${n.role === 'ADMIN' ? 'admin' : n.role === 'TECHNICIAN' ? 'maintenance' : 'staff'}`} style={{ fontSize: '9px', padding: '2px 6px' }}>
+                            {n.role === 'ADMIN' ? '🛡️ Admin' : n.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Staff'}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
 
             {selectedNurseId && (
@@ -815,21 +967,131 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
               )}
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 0, position: 'relative' }}>
               <label className="form-label">Pilih Mesin Dialysis *</label>
-              <select
-                className="form-select"
-                value={selectedMachineId}
-                onChange={(e) => setSelectedMachineId(e.target.value)}
-                disabled={!step4Unlocked}
-              >
-                <option value="">-- Pilih Mesin --</option>
-                {selectableMachines.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.machineCode} (Lantai {m.floor} - {m.notes ? getNotesWithoutPrefix(m.notes) : 'Ready'})
-                  </option>
-                ))}
-              </select>
+              <div className="relative" style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ paddingRight: '36px' }}
+                  placeholder="Cari kode mesin atau catatan..."
+                  value={machineSearch}
+                  onChange={(e) => {
+                    setMachineSearch(e.target.value);
+                    setShowMachineSuggestions(true);
+                    if (!e.target.value) {
+                      setSelectedMachineId('');
+                    }
+                  }}
+                  onFocus={() => setShowMachineSuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowMachineSuggestions(false);
+                      // Snap back to correct representation
+                      if (selectedMachineId) {
+                        const machine = machines.find((m) => m.id === selectedMachineId);
+                        if (machine) {
+                          setMachineSearch(`${machine.machineCode} (Lantai ${machine.floor})`);
+                        } else {
+                          setMachineSearch('');
+                        }
+                      } else {
+                        setMachineSearch('');
+                      }
+                    }, 200);
+                  }}
+                  disabled={!step4Unlocked}
+                />
+                {machineSearch && (
+                  <button
+                    type="button"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '4px',
+                    }}
+                    onClick={() => {
+                      setMachineSearch('');
+                      setSelectedMachineId('');
+                      setShowMachineSuggestions(false);
+                    }}
+                    disabled={!step4Unlocked}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions Autocomplete Dropdown */}
+              {showMachineSuggestions && step4Unlocked && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: '#ffffff',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    zIndex: 9999,
+                    maxHeight: '180px',
+                    overflowY: 'auto',
+                    marginTop: '4px',
+                  }}
+                >
+                  {filteredMachines.length === 0 ? (
+                    <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>
+                      Mesin tidak ditemukan
+                    </div>
+                  ) : (
+                    filteredMachines.map((m) => {
+                      const isSelected = selectedMachineId === m.id;
+                      return (
+                        <div
+                          key={m.id}
+                          style={{
+                            padding: '10px 12px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            background: isSelected ? '#eff6ff' : '#ffffff',
+                            borderBottom: '1px solid #f1f5f9',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                          onMouseDown={() => {
+                            setSelectedMachineId(m.id);
+                            setMachineSearch(`${m.machineCode} (Lantai ${m.floor})`);
+                            setShowMachineSuggestions(false);
+                          }}
+                          className="hover:bg-blue-50 transition-colors"
+                        >
+                          <div>
+                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{m.machineCode}</span>
+                            <span style={{ color: '#64748b', marginLeft: '6px', fontSize: '11px' }}>Lantai {m.floor}</span>
+                          </div>
+                          <span style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {m.notes ? getNotesWithoutPrefix(m.notes) : 'Ready'}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
               {selectableMachines.length === 0 && step4Unlocked && (
                 <div style={{ marginTop: 6, fontSize: 11, color: '#ef4444' }}>
                   ⚠️ Tidak ada mesin berstatus READY yang tersedia di Lantai {bed.floor}.
