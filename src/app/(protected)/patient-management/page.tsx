@@ -133,6 +133,7 @@ function PatientModal({
                   <option value="Mrs">Mrs</option>
                   <option value="Tn">Tn</option>
                   <option value="Ny">Ny</option>
+                  <option value="Nn">Nn</option>
                 </select>
               </div>
               <div className="form-group">
