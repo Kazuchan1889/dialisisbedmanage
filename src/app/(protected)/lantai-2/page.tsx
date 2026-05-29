@@ -104,6 +104,13 @@ export default function Lantai2Page() {
           <p className="page-subtitle">DYALISIS BED AND MACHINE MANAGEMENT — Klinik Utama Jakarta Kidney Center Lantai 2</p>
         </div>
 
+        {/* Mobile Legend */}
+        <div className="mobile-legend">
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#d1fae5', border: '1.5px solid #6ee7b7' }} />Tersedia ({stats.available})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#fee2e2', border: '1.5px solid #fca5a5' }} />Terisi ({stats.occupied})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#fef3c7', border: '1.5px solid #fcd34d' }} />Perawatan ({stats.maintenance})</div>
+        </div>
+
         {/* Summary Stats */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
           <div className="stat-card" style={{ padding: '14px 20px', minWidth: 160 }}>

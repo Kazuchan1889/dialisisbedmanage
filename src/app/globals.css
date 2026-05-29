@@ -1157,3 +1157,557 @@ tbody tr:hover {
   color: var(--color-text);
   font-size: 13px;
 }
+
+/* ============================================================
+   HAMBURGER BUTTON (Mobile only)
+   ============================================================ */
+.sidebar-hamburger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  width: 40px;
+  height: 40px;
+  background: var(--color-sidebar);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: background 0.18s ease;
+}
+
+.sidebar-hamburger:hover {
+  background: var(--color-sidebar-hover);
+}
+
+/* ============================================================
+   SIDEBAR BACKDROP (Mobile only)
+   ============================================================ */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* ---- Tablet (≤ 1024px) ---- */
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 24px;
+  }
+
+  .topbar {
+    padding: 0 24px;
+  }
+}
+
+/* ---- Mobile (≤ 768px) ---- */
+@media (max-width: 768px) {
+
+  /* Layout */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Sidebar: off-canvas drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 110;
+  }
+
+  .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Show backdrop when open */
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  /* Show hamburger button */
+  .sidebar-hamburger {
+    display: flex;
+  }
+
+  /* Page container */
+  .page-container {
+    padding: 16px;
+    padding-top: 8px;
+  }
+
+  /* Topbar */
+  .topbar {
+    padding: 0 16px 0 60px; /* left padding for hamburger button */
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .topbar-title {
+    font-size: 13px;
+  }
+
+  .topbar-date {
+    font-size: 11px;
+  }
+
+  /* Floor legend: hide on mobile topbar, show separately */
+  .topbar .floor-legend {
+    display: none;
+  }
+
+  /* Page header */
+  .page-title {
+    font-size: 18px;
+  }
+
+  .page-subtitle {
+    font-size: 11px;
+  }
+
+  /* Stat cards: allow wrapping with 2 per row */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px 16px !important;
+    gap: 10px;
+  }
+
+  .stat-card-value {
+    font-size: 20px !important;
+  }
+
+  .stat-card-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Dashboard floor grid: stack vertically */
+  .dashboard-floor-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Floor map container: enable horizontal scroll */
+  .floor-map-container {
+    padding: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .floor-map-container::before {
+    content: '← Geser untuk melihat peta →';
+    display: block;
+    font-size: 10px;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  /* Modal: full width on mobile */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+  }
+
+  .modal-header {
+    padding: 16px 18px 14px;
+  }
+
+  .modal-body {
+    padding: 16px 18px;
+  }
+
+  .modal-footer {
+    padding: 12px 18px;
+  }
+
+  /* Table: horizontal scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th, td {
+    white-space: nowrap;
+  }
+
+  /* Login page */
+  .login-card {
+    padding: 28px 20px;
+  }
+
+  /* Buttons in topbar */
+  .topbar .btn-sm {
+    font-size: 11px;
+    height: 30px;
+    padding: 0 10px;
+  }
+
+  /* Page header margin */
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  /* Stat cards in floor pages */
+  .stat-card-label {
+    font-size: 11px;
+  }
+
+  /* Search input */
+  .search-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Quick links in dashboard */
+  .card .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+/* ---- Small mobile (≤ 480px) ---- */
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .topbar {
+    padding-left: 56px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+   MOBILE LEGEND (shown on mobile, hidden on desktop)
+   ============================================================ */
+.mobile-legend {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* ============================================================
+   COMPREHENSIVE RESPONSIVE — ALL PAGES & COMPONENTS
+   ============================================================ */
+
+/* ---- TOPBAR: Action buttons wrap below title on mobile ---- */
+@media (max-width: 768px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  /* The action button group in topbar (any div containing buttons) */
+  .topbar > div:last-child,
+  .topbar > button {
+    flex-shrink: 0;
+  }
+
+  /* Topbar buttons: stack Export + Add on nurse schedule */
+  .topbar > div[style*="display: flex"] {
+    flex-wrap: wrap;
+    gap: 6px !important;
+  }
+
+  .topbar .btn {
+    font-size: 11px;
+    padding: 0 10px;
+    height: 32px;
+  }
+}
+
+/* ---- STAT CARDS: flex-wrap already set, just limit min-width ---- */
+@media (max-width: 480px) {
+  /* Patient/Machine/User stats in flex row */
+  .stat-card[style*="minWidth: 140"] {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ---- MANAGEMENT PAGE SEARCH + ACTION BARS ---- */
+@media (max-width: 768px) {
+  /* Search bar full width */
+  div.search-wrapper {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Flex bars containing search + filters */
+  div[style*="display: flex"][style*="marginBottom: 16"] {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---- TABLES: proper horizontal scroll on all pages ---- */
+@media (max-width: 768px) {
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  /* Make th/td slightly more compact */
+  th {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+
+  td {
+    padding: 11px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ---- NURSE SCHEDULE: filter bar ---- */
+@media (max-width: 768px) {
+  /* The filter bar */
+  div[style*="background: #ffffff"][style*="borderRadius: 12"] {
+    flex-direction: column;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  /* Floor + date filters side-by-side on mobile */
+  div[style*="flexDirection: column"][style*="gap: 4"] {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Tab buttons: make them scroll on very narrow screens */
+  div[style*="borderBottom: 2px solid"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  div[style*="borderBottom: 2px solid"] button {
+    white-space: nowrap;
+    font-size: 12px !important;
+    padding: 10px 14px !important;
+  }
+
+  /* Export button on nurse schedule — shorten text on mobile */
+}
+
+/* ---- PAGINATION: wrap on mobile ---- */
+@media (max-width: 640px) {
+  div[style*="justifyContent: space-between"][style*="marginTop: 16"] {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center !important;
+  }
+
+  div[style*="justifyContent: space-between"][style*="marginTop: 16"] > span {
+    text-align: center;
+  }
+}
+
+/* ---- PATIENT FORM MODAL: 2-col grids → 1 col on mobile ---- */
+@media (max-width: 480px) {
+  /* Title + Name row: stack */
+  div[style*="gridTemplateColumns: 120px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* All 2-col form grids: stack */
+  div[style*="gridTemplateColumns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Status checkbox row: wrap */
+  div[style*="display: flex"][style*="gap: 20"] {
+    flex-wrap: wrap;
+    gap: 12px !important;
+  }
+}
+
+/* ---- BED MODAL (BedModal.tsx): tall modal full height ---- */
+@media (max-width: 768px) {
+  /* BedModal specific override — it uses max-width: 720px */
+  .modal[style*="maxWidth: 720px"],
+  .modal[style*="max-width: 720px"] {
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 94vh;
+  }
+
+  /* BedModal body: reduce padding */
+  .modal-body[style*="gap: 24px"],
+  .modal-body {
+    padding: 14px 16px;
+  }
+
+  /* BedModal 2-col form rows → 1 col */
+  .modal-body div[style*="gridTemplateColumns: 1fr 1fr"],
+  .modal-body div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* BedModal header nurse/machine suggestion dropdowns */
+  .modal-body div[style*="position: absolute"] {
+    max-width: 100%;
+  }
+}
+
+/* ---- LOGIN PAGE ---- */
+@media (max-width: 480px) {
+  .login-wrapper {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .login-logo-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .login-title {
+    font-size: 17px;
+  }
+}
+
+/* ---- DASHBOARD: stat grid + floor section ---- */
+@media (max-width: 640px) {
+  /* 2-column on very small screens */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+  }
+
+  /* Quick links: wrap buttons */
+  .card > div > a.btn,
+  .card > div > a {
+    flex: 1 1 calc(50% - 5px);
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ---- FLOOR MAP PAGES: stat cards flex fix ---- */
+@media (max-width: 560px) {
+  /* 2×2 grid for stat cards */
+  div[style*="display: flex"][style*="flexWrap: wrap"][style*="marginBottom: 20"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+/* ---- USER MANAGEMENT: info note ---- */
+@media (max-width: 640px) {
+  div[style*="background: #eff6ff"][style*="borderRadius: 10"] {
+    font-size: 11px;
+    padding: 10px 14px;
+  }
+}
+
+/* ---- TOPBAR DATE: hide on very small ---- */
+@media (max-width: 400px) {
+  .topbar-date {
+    display: none;
+  }
+
+  .topbar-title {
+    font-size: 12px;
+  }
+}
+
+/* ---- GENERAL: ensure no content overflows viewport ---- */
+@media (max-width: 768px) {
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Prevent very wide inline styles from overflowing */
+  [style*="minWidth: 850"],
+  [style*="minWidth: 720"],
+  [style*="minWidth: 700"] {
+    /* These are the floor maps — keep as-is for horizontal scroll */
+  }
+}
+
+/* ---- SCROLLBAR STYLING FOR HORIZONTAL SCROLLS ---- */
+.table-wrapper::-webkit-scrollbar,
+.floor-map-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-track,
+.floor-map-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 99px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb,
+.floor-map-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover,
+.floor-map-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+

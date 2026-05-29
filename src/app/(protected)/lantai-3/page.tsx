@@ -106,6 +106,13 @@ export default function Lantai3Page() {
           <p className="page-subtitle">DIALYSIS BED AND MACHINE MANAGEMENT — Klinik Utama Jakarta Kidney Center Lantai 3</p>
         </div>
 
+        {/* Mobile Legend */}
+        <div className="mobile-legend">
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0' }} />Tersedia ({stats.available})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#fef2f2', border: '1.5px solid #fecaca' }} />Terisi ({stats.occupied})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#fffbeb', border: '1.5px solid #fde68a' }} />Perawatan ({stats.maintenance})</div>
+        </div>
+
         {/* Stats Cards - Relocated to the top for consistency and clinical visibility */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
           <div className="stat-card" style={{ padding: '12px 18px', minWidth: 140, flex: '1 1 140px' }}>

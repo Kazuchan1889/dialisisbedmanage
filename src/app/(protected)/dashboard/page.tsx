@@ -184,7 +184,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Floor Details + Occupancy */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 300px', gap: 16, marginBottom: 24 }}>
+            <div className="dashboard-floor-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 300px', gap: 16, marginBottom: 24 }}>
+
               {/* Floor 2 */}
               <div className="floor-stat">
                 <div className="floor-stat-header">

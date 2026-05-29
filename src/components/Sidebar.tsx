@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import Image from "next/image";
 import jkcIcon from "../../jkc-icon.png";
+import { useEffect } from 'react';
 
 const navItems = [
   {
@@ -86,7 +87,12 @@ const navItems = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
@@ -94,62 +100,90 @@ export default function Sidebar() {
     ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    onClose();
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
-    <aside className="sidebar">
-      {/* Header */}
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <Image
-              src={jkcIcon}
-              alt="JKC Icon"
-              width={42}
-              height={42}
-              className="rounded-lg"
-              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-            />
-          </div>
-          <div>
-            <div className="sidebar-logo-text">JKC Dialysis</div>
-            <div className="sidebar-subtitle">Management System</div>
+    <>
+      {/* Backdrop overlay for mobile */}
+      {isOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`sidebar${isOpen ? ' sidebar-mobile-open' : ''}`}>
+        {/* Header */}
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <div className="sidebar-logo-icon">
+              <Image
+                src={jkcIcon}
+                alt="JKC Icon"
+                width={42}
+                height={42}
+                className="rounded-lg"
+                style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+              />
+            </div>
+            <div>
+              <div className="sidebar-logo-text">JKC Dialysis</div>
+              <div className="sidebar-subtitle">Management System</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Menu Utama</div>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`sidebar-item ${pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}`}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+        {/* Navigation */}
+        <nav className="sidebar-nav">
+          <div className="sidebar-section-label">Menu Utama</div>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`sidebar-item ${pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
 
-      {/* Footer */}
-      <div className="sidebar-footer">
-        <div className="sidebar-user">
-          <div className="sidebar-user-avatar">{initials}</div>
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{session?.user?.name || 'User'}</div>
-            <div className="sidebar-user-role">{(session?.user as any)?.role || 'STAFF'}</div>
+        {/* Footer */}
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="sidebar-user-avatar">{initials}</div>
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{session?.user?.name || 'User'}</div>
+              <div className="sidebar-user-role">{(session?.user as any)?.role || 'STAFF'}</div>
+            </div>
+            <button
+              className="logout-btn"
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              title="Logout"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+            </button>
           </div>
-          <button
-            className="logout-btn"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            title="Logout"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
-            </svg>
-          </button>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

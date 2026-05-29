@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
 
@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   title: 'JKC Dialysis Management | Klinik Utama Jakarta Kidney Center',
   description: 'Sistem Manajemen Tempat Tidur dan Mesin Dialisis - Klinik Utama Jakarta Kidney Center',
 };
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
