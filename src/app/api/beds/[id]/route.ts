@@ -14,11 +14,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       nurseSchedules: {
         include: {
           nurse: {
-            select: { id: true, name: true, role: true }
+            select: { id: true, name: true, role: true, username: true }
           }
         },
-        orderBy: { startTime: 'desc' },
-        take: 5
+        orderBy: { startTime: 'asc' },
+        take: 20
       }
     },
   });
@@ -166,11 +166,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       nurseSchedules: {
         include: {
           nurse: {
-            select: { id: true, name: true, role: true }
+            select: { id: true, name: true, role: true, username: true }
           }
         },
-        orderBy: { startTime: 'desc' },
-        take: 5
+        orderBy: { startTime: 'asc' },
+        take: 20
       }
     }
   });
