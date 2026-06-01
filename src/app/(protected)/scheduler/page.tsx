@@ -25,9 +25,9 @@ interface BedData {
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const SHIFTS = [
-  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '07:00–14:00', defaultStart: '07:00', defaultEnd: '14:00', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
-  { key: 'DAY',     label: 'Siang', emoji: '☀️', timeRange: '14:00–21:00', defaultStart: '14:00', defaultEnd: '21:00', bg: '#f0fdf4', border: '#86efac', color: '#15803d', headerBg: 'linear-gradient(135deg,#16a34a,#22c55e)', badgeBg: '#dcfce7' },
-  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '21:00–07:00', defaultStart: '21:00', defaultEnd: '07:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '06:30–11:30', defaultStart: '06:30', defaultEnd: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
+  { key: 'DAY',     label: 'Siang', emoji: '☀️', timeRange: '12:30–17:30', defaultStart: '12:30', defaultEnd: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', headerBg: 'linear-gradient(135deg,#16a34a,#22c55e)', badgeBg: '#dcfce7' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '17:30–06:30', defaultStart: '17:30', defaultEnd: '06:30', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
 ];
 const SESSION_PRESETS = [
   ...SHIFTS,
@@ -95,8 +95,8 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   const [session,     setSession]     = useState('MORNING');
   const [startDate,   setStartDate]   = useState(date);
   const [endDate,     setEndDate]     = useState(date);
-  const [startTime,   setStartTime]   = useState('07:00');
-  const [endTime,     setEndTime]     = useState('14:00');
+  const [startTime,   setStartTime]   = useState('06:30');
+  const [endTime,     setEndTime]     = useState('11:30');
   const [patSearch,   setPatSearch]   = useState('');
   const [showSug,     setShowSug]     = useState(false);
   const [selPatient,  setSelPatient]  = useState<PatientInfo | null>(null);

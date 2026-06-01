@@ -64,9 +64,9 @@ function stripRepairedPrefix(notes?: string | null) {
 function detectShift(startTime: string): { val: string; label: string; bg: string; color: string } {
   const [h, m] = startTime.split(':').map(Number);
   const total = h * 60 + m;
-  if (total >= 6 * 60 + 30 && total <= 12 * 60)
+  if (total >= 6 * 60 + 30 && total < 12 * 60 + 30)
     return { val: 'MORNING', label: 'Pagi 🌅', bg: '#fef3c7', color: '#d97706' };
-  if (total >= 12 * 60 + 30 && total <= 17 * 60 + 30)
+  if (total >= 12 * 60 + 30 && total < 17 * 60 + 30)
     return { val: 'DAY', label: 'Siang ☀️', bg: '#dcfce7', color: '#15803d' };
   return { val: 'NIGHT', label: 'Malam 🌙', bg: '#e0f2fe', color: '#0369a1' };
 }
@@ -110,9 +110,9 @@ function SectionHeader({ children, color = '#1e293b' }: { children: React.ReactN
 
 /* ─── Shift presets (aligned with Scheduler page) ───────────── */
 const SHIFT_PRESETS = [
-  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', start: '07:00', end: '14:00', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', badgeBg: '#fef3c7' },
-  { key: 'DAY',     label: 'Siang', emoji: '☀️', start: '14:00', end: '21:00', bg: '#f0fdf4', border: '#86efac', color: '#15803d', badgeBg: '#dcfce7' },
-  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', start: '21:00', end: '07:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', badgeBg: '#dbeafe' },
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', start: '06:30', end: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', badgeBg: '#fef3c7' },
+  { key: 'DAY',     label: 'Siang', emoji: '☀️', start: '12:30', end: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', badgeBg: '#dcfce7' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', start: '17:30', end: '06:30', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', badgeBg: '#dbeafe' },
   { key: 'CUSTOM',  label: 'Custom',emoji: '🕐', start: '08:00', end: '16:00', bg: '#f8fafc', border: '#cbd5e1', color: '#475569', badgeBg: '#f1f5f9' },
 ];
 
@@ -456,7 +456,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     _key: Math.random().toString(36).slice(2),
     nurseId: '', nurseName: '', nurseRole: '',
     startDate: today, endDate: today,
-    startTime: '08:00', endTime: '14:00',
+    startTime: '06:30', endTime: '11:30',
     scheduleNotes: '',
   });
   const [nurseSlots, setNurseSlots] = useState<NurseSlot[]>([makeSlot()]);

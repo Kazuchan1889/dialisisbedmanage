@@ -43,8 +43,8 @@ function ScheduleModal({
   const [selectedNurseId, setSelectedNurseId] = useState('');
   const [scheduleStartDate, setScheduleStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleEndDate, setScheduleEndDate] = useState(new Date().toISOString().split('T')[0]);
-  const [scheduleStartTime, setScheduleStartTime] = useState('08:00');
-  const [scheduleEndTime, setScheduleEndTime] = useState('14:00');
+  const [scheduleStartTime, setScheduleStartTime] = useState('06:30');
+  const [scheduleEndTime, setScheduleEndTime] = useState('11:30');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
