@@ -108,6 +108,14 @@ function SectionHeader({ children, color = '#1e293b' }: { children: React.ReactN
   );
 }
 
+/* ─── Shift presets (aligned with Scheduler page) ───────────── */
+const SHIFT_PRESETS = [
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', start: '07:00', end: '14:00', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', badgeBg: '#fef3c7' },
+  { key: 'DAY',     label: 'Siang', emoji: '☀️', start: '14:00', end: '21:00', bg: '#f0fdf4', border: '#86efac', color: '#15803d', badgeBg: '#dcfce7' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', start: '21:00', end: '07:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', badgeBg: '#dbeafe' },
+  { key: 'CUSTOM',  label: 'Custom',emoji: '🕐', start: '08:00', end: '16:00', bg: '#f8fafc', border: '#cbd5e1', color: '#475569', badgeBg: '#f1f5f9' },
+];
+
 /* ─── Nurse Slot Card (inside Edit form) ─────────────────────── */
 function NurseSlotCard({
   slot, nurses, index, onUpdate, onRemove,
@@ -116,20 +124,32 @@ function NurseSlotCard({
   onUpdate: (key: string, patch: Partial<NurseSlot>) => void;
   onRemove: (key: string) => void;
 }) {
-  const [search, setSearch] = useState(slot.nurseName ? `${slot.nurseName} (${slot.nurseRole === 'TECHNICIAN' ? 'Teknisi' : slot.nurseRole === 'ADMIN' ? 'Admin' : 'Staff'})` : '');
+  const [search,  setSearch]  = useState(slot.nurseName ? `${slot.nurseName} (${slot.nurseRole === 'TECHNICIAN' ? 'Teknisi' : slot.nurseRole === 'ADMIN' ? 'Admin' : 'Staff'})` : '');
   const [showSug, setShowSug] = useState(false);
+  const [preset,  setPreset]  = useState<string>('MORNING');
 
   const filtered = nurses.filter((n) => {
     const q = search.toLowerCase();
     return n.name.toLowerCase().includes(q) || (n.role === 'TECHNICIAN' ? 'teknisi' : n.role === 'ADMIN' ? 'admin' : 'staff').includes(q);
   });
 
-  const shift = detectShift(slot.startTime);
+  const activePr = SHIFT_PRESETS.find((p) => p.key === preset) || SHIFT_PRESETS[0];
+
+  const applyPreset = (p: typeof SHIFT_PRESETS[number]) => {
+    setPreset(p.key);
+    if (p.key !== 'CUSTOM') {
+      const nextEndDate = p.key === 'NIGHT' ? (() => {
+        const d = new Date(slot.startDate + 'T00:00:00'); d.setDate(d.getDate() + 1);
+        return d.toISOString().split('T')[0];
+      })() : slot.startDate;
+      onUpdate(slot._key, { startTime: p.start, endTime: p.end, endDate: nextEndDate });
+    }
+  };
 
   return (
     <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: 14, marginBottom: 10 }}>
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#1e6fa6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{index + 1}</div>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>Perawat / Teknisi {index + 1}</span>
@@ -138,6 +158,22 @@ function NurseSlotCard({
           style={{ width: 26, height: 26, borderRadius: 6, background: '#fee2e2', border: 'none', cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
+      </div>
+
+      {/* ── Shift preset tabs ── */}
+      <div style={{ background: '#f1f5f9', borderRadius: 8, padding: 3, display: 'flex', gap: 0, marginBottom: 10 }}>
+        {SHIFT_PRESETS.map((p) => (
+          <button key={p.key} type="button" onClick={() => applyPreset(p)}
+            style={{ flex: 1, padding: '5px 2px', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 10,
+              background: preset === p.key ? '#fff' : 'transparent',
+              color: preset === p.key ? p.color : '#64748b',
+              fontWeight: preset === p.key ? 700 : 500,
+              boxShadow: preset === p.key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              transition: 'all 0.15s' }}>
+            {p.emoji} {p.label}
+            {p.key !== 'CUSTOM' && <div style={{ fontSize: 8, color: preset === p.key ? p.color : '#94a3b8', marginTop: 1 }}>{p.start}–{p.end}</div>}
+          </button>
+        ))}
       </div>
 
       {/* Nurse search */}
@@ -169,29 +205,44 @@ function NurseSlotCard({
         )}
       </div>
 
-      {/* Date + Time grid */}
+      {/* Date range */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tgl Mulai</label>
-          <input type="date" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.startDate} onChange={(e) => onUpdate(slot._key, { startDate: e.target.value })} />
+          <input type="date" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.startDate}
+            onChange={(e) => {
+              const nd = e.target.value;
+              let ed = slot.endDate;
+              if (preset === 'NIGHT') { const d = new Date(nd + 'T00:00:00'); d.setDate(d.getDate() + 1); ed = d.toISOString().split('T')[0]; }
+              else if (preset !== 'CUSTOM') ed = nd;
+              onUpdate(slot._key, { startDate: nd, endDate: ed });
+            }} />
         </div>
         <div>
           <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tgl Selesai</label>
-          <input type="date" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.endDate} onChange={(e) => onUpdate(slot._key, { endDate: e.target.value })} />
-        </div>
-        <div>
-          <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
-          <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.startTime} onChange={(e) => onUpdate(slot._key, { startTime: e.target.value })} />
-        </div>
-        <div>
-          <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Selesai</label>
-          <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.endTime} onChange={(e) => onUpdate(slot._key, { endTime: e.target.value })} />
+          <input type="date" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.endDate} min={slot.startDate}
+            onChange={(e) => onUpdate(slot._key, { endDate: e.target.value })} />
         </div>
       </div>
 
-      {/* Shift detected */}
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, background: shift.bg, fontSize: 11, fontWeight: 600, color: shift.color, marginBottom: 8 }}>
-        Shift: <strong>{shift.label}</strong>
+      {/* Time — only shown in CUSTOM mode */}
+      {preset === 'CUSTOM' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
+            <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.startTime} onChange={(e) => onUpdate(slot._key, { startTime: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Selesai</label>
+            <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.endTime} onChange={(e) => onUpdate(slot._key, { endTime: e.target.value })} />
+          </div>
+        </div>
+      )}
+
+      {/* Shift summary pill */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, background: activePr.badgeBg, border: `1px solid ${activePr.border}`, fontSize: 11, fontWeight: 600, color: activePr.color, marginBottom: 8 }}>
+        {activePr.emoji} Shift {activePr.label}: {slot.startTime || activePr.start} – {slot.endTime || activePr.end}
+        {slot.startDate !== slot.endDate && <span style={{ fontWeight: 400 }}> ({slot.endDate})</span>}
       </div>
 
       {/* Notes */}
@@ -205,6 +256,7 @@ function NurseSlotCard({
 }
 
 /* ─── Info Panel (read-only view for occupied bed) ───────────── */
+
 function BedInfoPanel({
   detailedBed, patients, onDeleteSchedule, onUnassign, saving,
 }: {
@@ -215,7 +267,6 @@ function BedInfoPanel({
   const now = new Date();
   const activeSchedules = (detailedBed.nurseSchedules ?? []).filter((ns) => now >= new Date(ns.startTime) && now <= new Date(ns.endTime));
   const upcomingSchedules = (detailedBed.nurseSchedules ?? []).filter((ns) => now < new Date(ns.startTime));
-  const pastSchedules = (detailedBed.nurseSchedules ?? []).filter((ns) => now > new Date(ns.endTime)).slice(-5);
 
   const patientDetail = patients.find((p) => p.mrNumber === detailedBed.patientId);
 
@@ -324,17 +375,12 @@ function BedInfoPanel({
         <ScheduleGroup title="⏳ Jadwal Mendatang" headerBg="linear-gradient(135deg,#0369a1,#0ea5e9)" schedules={upcomingSchedules} now={now} onDelete={onDeleteSchedule} showDelete />
       )}
 
-      {/* Past nurses */}
-      {pastSchedules.length > 0 && (
-        <ScheduleGroup title="📋 Riwayat Tugas Terakhir" headerBg="linear-gradient(135deg,#475569,#64748b)" schedules={pastSchedules} now={now} onDelete={onDeleteSchedule} showDelete={false} />
-      )}
-
       {/* Empty state */}
       {activeSchedules.length === 0 && upcomingSchedules.length === 0 && (
         <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 12, padding: 20, textAlign: 'center' }}>
           <div style={{ fontSize: 26, marginBottom: 6 }}>📭</div>
           <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>Belum ada jadwal penugasan aktif</div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Klik tab "Edit" untuk menambah jadwal perawat</div>
+          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Atur jadwal perawat melalui menu Scheduler</div>
         </div>
       )}
     </div>
@@ -578,19 +624,6 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           </div>
-
-          {/* Tab bar (only when bed is assigned) */}
-          {isBedAssigned && (
-            <div style={{ display: 'flex', gap: 0, marginTop: 14, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
-              {(['info', 'edit'] as const).map((v) => (
-                <button key={v} type="button" onClick={() => setActiveView(v)}
-                  style={{ flex: 1, padding: '7px 10px', borderRadius: 6, border: 'none', background: activeView === v ? '#fff' : 'transparent', color: activeView === v ? '#1e6fa6' : '#64748b', fontWeight: activeView === v ? 700 : 500, fontSize: 12, cursor: 'pointer', boxShadow: activeView === v ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
-                  {v === 'info' ? '📊 Info Operasional' : '✏️ Edit / Tambah'}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div style={{ height: 14 }} />
         </div>
 
@@ -896,7 +929,13 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
 
         {/* ── FOOTER ── */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0, borderRadius: '0 0 16px 16px' }}>
-          <button className="btn btn-secondary" onClick={onClose} disabled={saving}>Batal</button>
+          <button className="btn btn-secondary" onClick={() => {
+            if (activeView === 'edit' && isBedAssigned) {
+              setActiveView('info');
+            } else {
+              onClose();
+            }
+          }} disabled={saving}>Batal</button>
           {activeView === 'info' && (
             <button className="btn btn-primary" onClick={() => setActiveView('edit')}>✏️ Edit Data Bed</button>
           )}

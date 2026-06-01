@@ -55,10 +55,12 @@ model Bed {
   machine     Machine?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  nurseSchedules NurseSchedule[]
+  nurseSchedules   NurseSchedule[]
+  patientSchedules PatientSchedule[]
 
   @@map("beds")
 }
+
 
 model Machine {
   id          String        @id @default(cuid())
@@ -106,4 +108,20 @@ model Patient {
   updatedAt         DateTime  @updatedAt
 
   @@map("patients")
+}
+
+model PatientSchedule {
+  id          String   @id @default(cuid())
+  bedId       String
+  bed         Bed      @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  patientId   String   // MR number
+  patientName String
+  sessionType String   @default("MORNING")  // MORNING | DAY | NIGHT | CUSTOM
+  startTime   DateTime
+  endTime     DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("patient_schedules")
 }
