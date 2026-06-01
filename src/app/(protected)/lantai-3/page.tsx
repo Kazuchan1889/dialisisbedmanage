@@ -200,9 +200,9 @@ export default function Lantai3Page() {
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Korteks Room</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
-                  <div style={{ width: 72, height: 22 }} />{B('T45')}
+                  <div style={{ width: 72, height: 22 }} />{B('T44')}
                   <div style={{ width: 72, height: 22 }} /><div style={{ width: 72, height: 22 }} />
-                  {B('A44')}<div style={{ width: 72, height: 22 }} />
+                  {B('A43')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
             </div>
