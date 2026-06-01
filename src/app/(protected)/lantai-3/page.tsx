@@ -190,9 +190,9 @@ export default function Lantai3Page() {
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>Medula Room</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                  {B('T38')}<div style={{ width: 72, height: 22 }} />
+                  {B('T40')}<div style={{ width: 72, height: 22 }} />
                   {B('T39')}{B('T41')}
-                  {B('T40')}{B('T42')}
+                  {B('T38')}{B('T42')}
                 </div>
               </div>
 
