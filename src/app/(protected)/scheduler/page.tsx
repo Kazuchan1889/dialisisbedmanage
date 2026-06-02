@@ -49,7 +49,18 @@ function fmtDate(ds: string) {
   return new Date(ds + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  const d = new Date(iso);
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+function detectSessionKey(startTime: string): string {
+  const [h, m] = startTime.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return 'MORNING';
+  const total = h * 60 + m;
+  if (total >= 6 * 60 + 30 && total < 12 * 60 + 30) return 'MORNING';
+  if (total >= 12 * 60 + 30 && total < 17 * 60 + 30) return 'DAY';
+  return 'NIGHT';
 }
 function ini(name: string) { return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2); }
 
@@ -104,7 +115,10 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState('');
 
-  const activeSession = SESSION_PRESETS.find((s) => s.key === session) || SESSION_PRESETS[0];
+  // Dynamically detect shift based on user input startTime
+  const detectedKey = detectSessionKey(startTime);
+  const detectedSession = SESSION_PRESETS.find((s) => s.key === detectedKey) || SESSION_PRESETS[0];
+
   const filteredPats  = patients.filter((p) => {
     const q = patSearch.toLowerCase();
     return p.name.toLowerCase().includes(q) || p.mrNumber.toLowerCase().includes(q);
@@ -118,8 +132,25 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
       setEndTime(sp.defaultEnd);
       if (key === 'NIGHT') setEndDate(addDays(startDate, 1));
       else setEndDate(startDate);
+    } else {
+      setStartTime('08:00');
+      setEndTime('16:00');
+      setEndDate(startDate);
     }
   };
+
+  // Dynamically update preset tab highlight based on time values
+  useEffect(() => {
+    if (startTime === '06:30' && endTime === '11:30') {
+      setSession('MORNING');
+    } else if (startTime === '12:30' && endTime === '17:30') {
+      setSession('DAY');
+    } else if (startTime === '17:30' && endTime === '06:30') {
+      setSession('NIGHT');
+    } else {
+      setSession('CUSTOM');
+    }
+  }, [startTime, endTime]);
 
   useEffect(() => {
     if (session === 'NIGHT') setEndDate(addDays(startDate, 1));
@@ -133,7 +164,17 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
       const res = await fetch('/api/patient-schedules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bedId: bed.id, patientId: selPatient.mrNumber, patientName: selPatient.name, sessionType: session, startDate, endDate, startTime, endTime, notes: notes || null }),
+        body: JSON.stringify({ 
+          bedId: bed.id, 
+          patientId: selPatient.mrNumber, 
+          patientName: selPatient.name, 
+          sessionType: detectedKey, // Follow user's input time!
+          startDate, 
+          endDate, 
+          startTime, 
+          endTime, 
+          notes: notes || null 
+        }),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Gagal'); }
       onSaved(); onClose();
@@ -230,18 +271,47 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
-              <input type="time" className="form-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <div style={{ display: 'flex', gap: 4 }}>
+                <select className="form-input" value={(startTime || '00:00').split(':')[0]} onChange={(e) => setStartTime(`${e.target.value}:${(startTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const h = String(i).padStart(2, '0');
+                    return <option key={h} value={h}>{h}</option>;
+                  })}
+                </select>
+                <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                <select className="form-input" value={(startTime || '00:00').split(':')[1]} onChange={(e) => setStartTime(`${(startTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 60 }).map((_, i) => {
+                    const m = String(i).padStart(2, '0');
+                    return <option key={m} value={m}>{m}</option>;
+                  })}
+                </select>
+              </div>
             </div>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Selesai</label>
-              <input type="time" className="form-input" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <div style={{ display: 'flex', gap: 4 }}>
+                <select className="form-input" value={(endTime || '00:00').split(':')[0]} onChange={(e) => setEndTime(`${e.target.value}:${(endTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const h = String(i).padStart(2, '0');
+                    return <option key={h} value={h}>{h}</option>;
+                  })}
+                </select>
+                <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                <select className="form-input" value={(endTime || '00:00').split(':')[1]} onChange={(e) => setEndTime(`${(endTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 60 }).map((_, i) => {
+                    const m = String(i).padStart(2, '0');
+                    return <option key={m} value={m}>{m}</option>;
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Session summary */}
-          <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: activeSession.badgeBg, border: `1px solid ${activeSession.border}` }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: activeSession.color }}>
-              {activeSession.emoji} Sesi {activeSession.label}: {startTime} – {endTime}
+          <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: detectedSession.badgeBg, border: `1px solid ${detectedSession.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: detectedSession.color }}>
+              {detectedSession.emoji} Shift {detectedSession.label}: {startTime} – {endTime}
+              {session === 'CUSTOM' && <span style={{ fontStyle: 'italic', opacity: 0.8, fontWeight: 500 }}> (Kustom)</span>}
               {startDate !== endDate && <span style={{ fontWeight: 400 }}> · {startDate} → {endDate}</span>}
             </span>
           </div>
@@ -459,11 +529,39 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
-              <input type="time" className="form-input" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <div style={{ display: 'flex', gap: 4 }}>
+                <select className="form-input" value={(startTime || '00:00').split(':')[0]} onChange={(e) => setStartTime(`${e.target.value}:${(startTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const h = String(i).padStart(2, '0');
+                    return <option key={h} value={h}>{h}</option>;
+                  })}
+                </select>
+                <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                <select className="form-input" value={(startTime || '00:00').split(':')[1]} onChange={(e) => setStartTime(`${(startTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 60 }).map((_, i) => {
+                    const m = String(i).padStart(2, '0');
+                    return <option key={m} value={m}>{m}</option>;
+                  })}
+                </select>
+              </div>
             </div>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Selesai</label>
-              <input type="time" className="form-input" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <div style={{ display: 'flex', gap: 4 }}>
+                <select className="form-input" value={(endTime || '00:00').split(':')[0]} onChange={(e) => setEndTime(`${e.target.value}:${(endTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const h = String(i).padStart(2, '0');
+                    return <option key={h} value={h}>{h}</option>;
+                  })}
+                </select>
+                <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                <select className="form-input" value={(endTime || '00:00').split(':')[1]} onChange={(e) => setEndTime(`${(endTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                  {Array.from({ length: 60 }).map((_, i) => {
+                    const m = String(i).padStart(2, '0');
+                    return <option key={m} value={m}>{m}</option>;
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 

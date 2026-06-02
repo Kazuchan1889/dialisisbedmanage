@@ -245,23 +245,39 @@ function ScheduleModal({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Jam Mulai *</label>
-                <input
-                  type="time"
-                  className="form-input"
-                  value={scheduleStartTime}
-                  onChange={(e) => setScheduleStartTime(e.target.value)}
-                  required
-                />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <select className="form-input" value={(scheduleStartTime || '00:00').split(':')[0]} onChange={(e) => setScheduleStartTime(`${e.target.value}:${(scheduleStartTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const h = String(i).padStart(2, '0');
+                      return <option key={h} value={h}>{h}</option>;
+                    })}
+                  </select>
+                  <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                  <select className="form-input" value={(scheduleStartTime || '00:00').split(':')[1]} onChange={(e) => setScheduleStartTime(`${(scheduleStartTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                    {Array.from({ length: 60 }).map((_, i) => {
+                      const m = String(i).padStart(2, '0');
+                      return <option key={m} value={m}>{m}</option>;
+                    })}
+                  </select>
+                </div>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Jam Selesai *</label>
-                <input
-                  type="time"
-                  className="form-input"
-                  value={scheduleEndTime}
-                  onChange={(e) => setScheduleEndTime(e.target.value)}
-                  required
-                />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <select className="form-input" value={(scheduleEndTime || '00:00').split(':')[0]} onChange={(e) => setScheduleEndTime(`${e.target.value}:${(scheduleEndTime || '00:00').split(':')[1]}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const h = String(i).padStart(2, '0');
+                      return <option key={h} value={h}>{h}</option>;
+                    })}
+                  </select>
+                  <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+                  <select className="form-input" value={(scheduleEndTime || '00:00').split(':')[1]} onChange={(e) => setScheduleEndTime(`${(scheduleEndTime || '00:00').split(':')[0]}:${e.target.value}`)} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }}>
+                    {Array.from({ length: 60 }).map((_, i) => {
+                      const m = String(i).padStart(2, '0');
+                      return <option key={m} value={m}>{m}</option>;
+                    })}
+                  </select>
+                </div>
               </div>
             </div>
 

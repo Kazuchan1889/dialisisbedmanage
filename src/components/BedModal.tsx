@@ -230,11 +230,39 @@ function NurseSlotCard({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
           <div>
             <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
-            <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.startTime} onChange={(e) => onUpdate(slot._key, { startTime: e.target.value })} />
+            <div style={{ display: 'flex', gap: 4 }}>
+              <select className="form-input" style={{ fontSize: 12, padding: '7px 8px', flex: 1 }} value={(slot.startTime || '00:00').split(':')[0]} onChange={(e) => onUpdate(slot._key, { startTime: `${e.target.value}:${(slot.startTime || '00:00').split(':')[1]}` })}>
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const h = String(i).padStart(2, '0');
+                  return <option key={h} value={h}>{h}</option>;
+                })}
+              </select>
+              <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+              <select className="form-input" style={{ fontSize: 12, padding: '7px 8px', flex: 1 }} value={(slot.startTime || '00:00').split(':')[1]} onChange={(e) => onUpdate(slot._key, { startTime: `${(slot.startTime || '00:00').split(':')[0]}:${e.target.value}` })}>
+                {Array.from({ length: 60 }).map((_, i) => {
+                  const m = String(i).padStart(2, '0');
+                  return <option key={m} value={m}>{m}</option>;
+                })}
+              </select>
+            </div>
           </div>
           <div>
             <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Selesai</label>
-            <input type="time" className="form-input" style={{ fontSize: 12, padding: '7px 8px' }} value={slot.endTime} onChange={(e) => onUpdate(slot._key, { endTime: e.target.value })} />
+            <div style={{ display: 'flex', gap: 4 }}>
+              <select className="form-input" style={{ fontSize: 12, padding: '7px 8px', flex: 1 }} value={(slot.endTime || '00:00').split(':')[0]} onChange={(e) => onUpdate(slot._key, { endTime: `${e.target.value}:${(slot.endTime || '00:00').split(':')[1]}` })}>
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const h = String(i).padStart(2, '0');
+                  return <option key={h} value={h}>{h}</option>;
+                })}
+              </select>
+              <span style={{ alignSelf: 'center', fontWeight: 'bold' }}>:</span>
+              <select className="form-input" style={{ fontSize: 12, padding: '7px 8px', flex: 1 }} value={(slot.endTime || '00:00').split(':')[1]} onChange={(e) => onUpdate(slot._key, { endTime: `${(slot.endTime || '00:00').split(':')[0]}:${e.target.value}` })}>
+                {Array.from({ length: 60 }).map((_, i) => {
+                  const m = String(i).padStart(2, '0');
+                  return <option key={m} value={m}>{m}</option>;
+                })}
+              </select>
+            </div>
           </div>
         </div>
       )}
