@@ -406,6 +406,13 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState('');
 
+  const scheduledPatientName = useMemo(() => {
+    const ps = bed.patientSchedules.find((p) => p.sessionType === activeShift);
+    if (ps) return ps.patientName;
+    if (bed.patientSchedules.length > 0) return bed.patientSchedules[0].patientName;
+    return bed.patientName || null;
+  }, [bed, activeShift]);
+
   const applyShift = (s: typeof SHIFTS[number]) => {
     setActiveShift(s.key);
     setStartTime(s.defaultStart);
@@ -454,7 +461,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Tugaskan Perawat</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode}{bed.patientName ? ` · ${bed.patientName}` : ''}</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode}{scheduledPatientName ? ` · ${scheduledPatientName}` : ''}</div>
             </div>
             <button className="modal-close" onClick={onClose}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -605,6 +612,14 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
   const [deleting, setDeleting] = useState(false);
   const shift = SHIFTS.find((s) => s.key === schedule.shift) || SHIFTS[0];
   const grad = schedule.nurse.role === 'TECHNICIAN' ? 'linear-gradient(135deg,#f59e0b,#fbbf24)' : 'linear-gradient(135deg,#1e6fa6,#2d8fd6)';
+  
+  const scheduledPatientName = useMemo(() => {
+    const ps = bed.patientSchedules.find((p) => p.sessionType === schedule.shift);
+    if (ps) return ps.patientName;
+    if (bed.patientSchedules.length > 0) return bed.patientSchedules[0].patientName;
+    return bed.patientName || null;
+  }, [bed, schedule.shift]);
+
   const handleDelete = async () => {
     if (!confirm('Hapus jadwal ini?')) return;
     setDeleting(true);
@@ -627,7 +642,7 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '10px 14px', background: '#f8fafc', borderRadius: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
-            <div><div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div><div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} · {bed.section}{bed.patientName ? ` · ${bed.patientName}` : ''}</div></div>
+            <div><div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div><div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} · {bed.section}{scheduledPatientName ? ` · ${scheduledPatientName}` : ''}</div></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             {[{ label: 'Mulai', time: schedule.startTime }, { label: 'Selesai', time: schedule.endTime }].map(({ label, time }) => (
@@ -984,15 +999,23 @@ export default function SchedulerPage() {
                         <div key={shift.key} style={{ marginBottom: 8 }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: shift.color, marginBottom: 4 }}>{shift.emoji} {shift.label} ({items.length} bed)</div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                            {items.map(({ bed, schedule }) => (
-                              <div key={schedule.id} onClick={() => setNurseDetail({ schedule, bed })}
-                                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: shift.badgeBg, border: `1px solid ${shift.border}`, borderRadius: 16, cursor: 'pointer' }}>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={shift.color} strokeWidth="2.5"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: shift.color }}>{bed.bedCode}</span>
-                                {bed.patientName && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>· {bed.patientName.split(' ')[0]}</span>}
-                                <span style={{ fontSize: 9, color: shift.color, opacity: 0.6 }}>· {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
-                              </div>
-                            ))}
+                            {items.map(({ bed, schedule }) => {
+                              const scheduledPatName = (() => {
+                                const ps = bed.patientSchedules.find((p) => p.sessionType === schedule.shift);
+                                if (ps) return ps.patientName;
+                                if (bed.patientSchedules.length > 0) return bed.patientSchedules[0].patientName;
+                                return bed.patientName || null;
+                              })();
+                              return (
+                                <div key={schedule.id} onClick={() => setNurseDetail({ schedule, bed })}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: shift.badgeBg, border: `1px solid ${shift.border}`, borderRadius: 16, cursor: 'pointer' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={shift.color} strokeWidth="2.5"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: shift.color }}>{bed.bedCode}</span>
+                                  {scheduledPatName && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>· {scheduledPatName.split(' ')[0]}</span>}
+                                  <span style={{ fontSize: 9, color: shift.color, opacity: 0.6 }}>· {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
