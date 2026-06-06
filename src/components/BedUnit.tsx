@@ -41,16 +41,21 @@ export function isMachineDamagedOrRepaired(machine?: { status: string; notes?: s
 }
 
 export default function BedUnit({ bed, onClick, showCode = true }: BedUnitProps) {
-  const machineDamagedOrRepaired = isMachineDamagedOrRepaired(bed.machine);
+  const isRusak = bed.machine && bed.machine.status === 'MAINTENANCE';
+  const isRepair = bed.machine && bed.machine.status === 'AVAILABLE' && bed.machine.notes && bed.machine.notes.startsWith('[REPAIRED]');
 
   const statusClass =
-    machineDamagedOrRepaired
-      ? 'bed-maintenance'
+    isRusak
+      ? 'bed-maintenance-rusak'
+      : (isRepair || bed.status === 'MAINTENANCE')
+      ? 'bed-maintenance-repair'
       : bed.status === 'AVAILABLE'
       ? 'bed-available'
       : bed.status === 'OCCUPIED'
       ? 'bed-occupied'
-      : 'bed-maintenance';
+      : 'bed-maintenance-repair';
+
+  const machineDamagedOrRepaired = isMachineDamagedOrRepaired(bed.machine);
 
   let tooltipText = '';
   if (machineDamagedOrRepaired && bed.machine) {

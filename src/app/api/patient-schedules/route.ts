@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { syncBedState } from '@/lib/bedSync';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -86,6 +87,9 @@ export async function POST(req: NextRequest) {
       created.push(record);
       cur.setDate(cur.getDate() + 1);
     }
+
+    // Sync the bed's status and occupant immediately
+    await syncBedState(bedId);
 
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {

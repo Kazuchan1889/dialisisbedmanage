@@ -882,7 +882,29 @@ tbody tr:hover {
   border-color: #fca5a5;
 }
 
-/* Maintenance */
+/* Maintenance - Rusak (Dark Orange) */
+.bed-maintenance-rusak .bed-rect {
+  background: #ffedd5;
+  border-color: #ea580c;
+  color: #c2410c;
+}
+.bed-maintenance-rusak .machine-sq {
+  background: #fed7aa;
+  border-color: #ea580c;
+}
+
+/* Maintenance - Repair (Yellow) */
+.bed-maintenance-repair .bed-rect {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #d97706;
+}
+.bed-maintenance-repair .machine-sq {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+/* Legacy Bed Maintenance Fallback */
 .bed-maintenance .bed-rect {
   background: var(--color-maintenance-bg);
   border-color: #fcd34d;

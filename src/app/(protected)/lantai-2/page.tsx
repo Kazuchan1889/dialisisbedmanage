@@ -18,6 +18,7 @@ interface Bed {
     id: string;
     machineCode: string;
     status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE';
+    notes?: string | null;
   } | null;
 }
 
@@ -50,6 +51,8 @@ export default function Lantai2Page() {
     available: beds.filter((b) => b.status === 'AVAILABLE' && !isMachineDamagedOrRepaired(b.machine)).length,
     occupied: beds.filter((b) => b.status === 'OCCUPIED' && !isMachineDamagedOrRepaired(b.machine)).length,
     maintenance: beds.filter((b) => b.status === 'MAINTENANCE' || isMachineDamagedOrRepaired(b.machine)).length,
+    rusak: beds.filter((b) => b.machine && b.machine.status === 'MAINTENANCE').length,
+    repair: beds.filter((b) => b.status === 'MAINTENANCE' || (b.machine && b.machine.status === 'AVAILABLE' && b.machine.notes && b.machine.notes.startsWith('[REPAIRED]'))).length,
   };
 
   if (loading) {
@@ -91,8 +94,12 @@ export default function Lantai2Page() {
               Terisi ({stats.occupied})
             </div>
             <div className="legend-item">
+              <div className="legend-dot" style={{ background: '#ffedd5', border: '1.5px solid #ea580c' }} />
+              Mesin Rusak ({stats.rusak})
+            </div>
+            <div className="legend-item">
               <div className="legend-dot" style={{ background: '#fef3c7', border: '1.5px solid #fcd34d' }} />
-              Perawatan ({stats.maintenance})
+              Perawatan / Repair ({stats.repair})
             </div>
           </div>
         </div>
@@ -108,7 +115,8 @@ export default function Lantai2Page() {
         <div className="mobile-legend">
           <div className="legend-item"><div className="legend-dot" style={{ background: '#d1fae5', border: '1.5px solid #6ee7b7' }} />Tersedia ({stats.available})</div>
           <div className="legend-item"><div className="legend-dot" style={{ background: '#fee2e2', border: '1.5px solid #fca5a5' }} />Terisi ({stats.occupied})</div>
-          <div className="legend-item"><div className="legend-dot" style={{ background: '#fef3c7', border: '1.5px solid #fcd34d' }} />Perawatan ({stats.maintenance})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#ffedd5', border: '1.5px solid #ea580c' }} />Mesin Rusak ({stats.rusak})</div>
+          <div className="legend-item"><div className="legend-dot" style={{ background: '#fef3c7', border: '1.5px solid #fcd34d' }} />Perawatan / Repair ({stats.repair})</div>
         </div>
 
         {/* Summary Stats */}

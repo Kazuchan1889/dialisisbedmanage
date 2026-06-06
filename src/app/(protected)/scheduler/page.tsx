@@ -719,12 +719,27 @@ export default function SchedulerPage() {
   // All patient schedules for the day (flat list, sorted by bed)
   const allPatientSchedules = useMemo(() =>
     beds.flatMap((b) => b.patientSchedules.map((ps) => ({ ps, bed: b })))
-      .sort((a, b) => a.bed.floor - b.bed.floor || a.bed.position - b.bed.position),
+      .sort((a, b) => {
+        if (a.bed.floor !== b.bed.floor) return a.bed.floor - b.bed.floor;
+        const numA = parseInt(a.bed.bedCode.replace(/[^\d]/g, ''), 10) || 0;
+        const numB = parseInt(b.bed.bedCode.replace(/[^\d]/g, ''), 10) || 0;
+        return numA - numB;
+      }),
     [beds]);
 
   const bedsByFloor = useMemo(() => {
     const map = new Map<number, BedData[]>();
-    for (const b of beds) { if (!map.has(b.floor)) map.set(b.floor, []); map.get(b.floor)!.push(b); }
+    for (const b of beds) {
+      if (!map.has(b.floor)) map.set(b.floor, []);
+      map.get(b.floor)!.push(b);
+    }
+    map.forEach((floorBeds) => {
+      floorBeds.sort((a: BedData, b: BedData) => {
+        const numA = parseInt(a.bedCode.replace(/[^\d]/g, ''), 10) || 0;
+        const numB = parseInt(b.bedCode.replace(/[^\d]/g, ''), 10) || 0;
+        return numA - numB;
+      });
+    });
     return map;
   }, [beds]);
 
