@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 
 interface Stats {
@@ -55,18 +55,26 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState('');
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch('/api/dashboard/stats');
-        const data = await res.json();
-        setStats(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dashboard/stats');
+      if (!res.ok) {
+        throw new Error('Failed to fetch stats');
       }
-    };
+      const data = await res.json();
+      if (data.error || !data.floor2 || !data.floor3) {
+        throw new Error(data.error || 'Invalid stats data received');
+      }
+      setStats(data);
+    } catch (err) {
+      console.error(err);
+      setStats(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
     fetchStats();
     // Live clock
     const updateClock = () => {
@@ -78,7 +86,7 @@ export default function DashboardPage() {
     updateClock();
     const t = setInterval(updateClock, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [fetchStats]);
 
   const statCards = stats
     ? [
@@ -164,6 +172,23 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', padding: 60 }}>
             <div className="spinner spinner-dark" style={{ margin: '0 auto 12px' }} />
             <p style={{ color: '#64748b', fontSize: 13 }}>Memuat data...</p>
+          </div>
+        ) : !stats ? (
+          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12, border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+            <p style={{ color: '#dc2626', fontSize: 14, fontWeight: 700 }}>Gagal Memuat Statistik</p>
+            <p style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>
+              Terjadi kesalahan saat memproses data. Silakan periksa koneksi database Anda.
+            </p>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ marginTop: 14 }}
+              onClick={() => {
+                setLoading(true);
+                fetchStats();
+              }}
+            >
+              🔄 Coba Lagi
+            </button>
           </div>
         ) : (
           <>

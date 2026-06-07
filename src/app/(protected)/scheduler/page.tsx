@@ -425,6 +425,11 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
     else setEndDate(startDate);
   }, [startDate]); // eslint-disable-line
 
+  useEffect(() => {
+    const key = detectSessionKey(startTime);
+    setActiveShift(key);
+  }, [startTime]);
+
   const alreadyAssigned = bed.nurseSchedules.filter((s) => s.shift === activeShift).map((s) => s.nurse.id);
   const filteredNurses  = nurses.filter((n) => {
     const q = nurseSearch.toLowerCase();

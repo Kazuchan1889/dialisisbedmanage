@@ -94,12 +94,14 @@ export async function POST(req: NextRequest) {
 
         let finalShift = itemShift;
         if (!finalShift) {
-          const localHour = (start.getUTCHours() + 7) % 24;
-          const localMinute = start.getUTCMinutes();
+          const jktString = start.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
+          const jktDate = new Date(jktString);
+          const localHour = jktDate.getHours();
+          const localMinute = jktDate.getMinutes();
           const totalMins = localHour * 60 + localMinute;
-          if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+          if (totalMins >= 6 * 60 + 30 && totalMins < 12 * 60 + 30) {
             finalShift = 'MORNING';
-          } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+          } else if (totalMins >= 12 * 60 + 30 && totalMins < 17 * 60 + 30) {
             finalShift = 'DAY';
           } else {
             finalShift = 'NIGHT';
@@ -160,12 +162,14 @@ export async function POST(req: NextRequest) {
     // Determine shift if not provided
     let shiftVal = body.shift;
     if (!shiftVal) {
-      const localHour = (start.getUTCHours() + 7) % 24;
-      const localMinute = start.getUTCMinutes();
+      const jktString = start.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
+      const jktDate = new Date(jktString);
+      const localHour = jktDate.getHours();
+      const localMinute = jktDate.getMinutes();
       const totalMins = localHour * 60 + localMinute;
-      if (totalMins >= (6 * 60 + 30) && totalMins <= (12 * 60)) {
+      if (totalMins >= 6 * 60 + 30 && totalMins < 12 * 60 + 30) {
         shiftVal = 'MORNING';
-      } else if (totalMins >= (12 * 60 + 30) && totalMins <= (17 * 60 + 30)) {
+      } else if (totalMins >= 12 * 60 + 30 && totalMins < 17 * 60 + 30) {
         shiftVal = 'DAY';
       } else {
         shiftVal = 'NIGHT';

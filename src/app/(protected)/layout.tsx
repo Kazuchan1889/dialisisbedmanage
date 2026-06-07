@@ -1,21 +1,58 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import AuthProvider from '@/components/AuthProvider';
 
+type UserRole = 'ADMIN' | 'STAFF' | 'TECHNICIAN' | 'SUPERVISOR' | 'MANAGEMENT';
+
+// Must match the ROLE_MENU_ACCESS in Sidebar.tsx
+const ROLE_ALLOWED_ROUTES: Record<Exclude<UserRole, 'ADMIN'>, string[]> = {
+  MANAGEMENT: ['/dashboard', '/lantai-2', '/lantai-3'],
+  STAFF: ['/dashboard', '/lantai-2', '/lantai-3', '/nurse-schedule', '/scheduler'],
+  TECHNICIAN: ['/lantai-2', '/lantai-3', '/machine-management'],
+  SUPERVISOR: [
+    '/dashboard', '/lantai-2', '/lantai-3', '/nurse-schedule', '/scheduler',
+    '/queue', '/patient-management', '/machine-management', '/user-management',
+  ],
+};
+
+function isRouteAllowed(role: UserRole, pathname: string): boolean {
+  if (role === 'ADMIN') return true;
+  const allowed = ROLE_ALLOWED_ROUTES[role] || [];
+  return allowed.some((route) => pathname === route || pathname.startsWith(route + '/'));
+}
+
+function getDefaultRoute(role: UserRole): string {
+  if (role === 'ADMIN') return '/dashboard';
+  const allowed = ROLE_ALLOWED_ROUTES[role];
+  return allowed?.[0] || '/dashboard';
+}
+
 function ProtectedContent({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const userRole = ((session?.user as any)?.role || 'STAFF') as UserRole;
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
+
+  // Route-level access control: redirect if user tries to access unauthorized routes
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      if (!isRouteAllowed(userRole, pathname)) {
+        router.replace(getDefaultRoute(userRole));
+      }
+    }
+  }, [status, session, userRole, pathname, router]);
 
   if (status === 'loading') {
     return (
@@ -35,6 +72,9 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) return null;
+
+  // Don't render page content if route is not allowed (will redirect)
+  if (!isRouteAllowed(userRole, pathname)) return null;
 
   return (
     <div className="app-layout">
@@ -65,3 +105,4 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     </AuthProvider>
   );
 }
+

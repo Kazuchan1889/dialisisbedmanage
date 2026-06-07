@@ -5,7 +5,21 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import Image from "next/image";
 import jkcIcon from "../../jkc-icon.png";
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+
+type UserRole = 'ADMIN' | 'STAFF' | 'TECHNICIAN' | 'SUPERVISOR' | 'MANAGEMENT';
+
+// Define which roles can access each menu item
+// ADMIN always has access to everything (handled in filtering logic)
+const ROLE_MENU_ACCESS: Record<Exclude<UserRole, 'ADMIN'>, string[]> = {
+  MANAGEMENT: ['/dashboard', '/lantai-2', '/lantai-3'],
+  STAFF: ['/dashboard', '/lantai-2', '/lantai-3', '/nurse-schedule', '/scheduler'],
+  TECHNICIAN: ['/lantai-2', '/lantai-3', '/machine-management'],
+  SUPERVISOR: [
+    '/dashboard', '/lantai-2', '/lantai-3', '/nurse-schedule', '/scheduler',
+    '/queue', '/patient-management', '/machine-management', '/user-management',
+  ],
+};
 
 const navItems = [
   {
@@ -69,6 +83,19 @@ const navItems = [
     ),
   },
   {
+    href: '/queue',
+    label: 'Queue',
+    icon: (
+      <svg className="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M9 7h6M9 11h6M9 15h4" strokeLinecap="round" />
+        <circle cx="6" cy="7" r="0.5" fill="currentColor" stroke="none" />
+        <circle cx="6" cy="11" r="0.5" fill="currentColor" stroke="none" />
+        <circle cx="6" cy="15" r="0.5" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
     href: '/patient-management',
     label: 'Patient Management',
     icon: (
@@ -112,9 +139,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  const userRole = ((session?.user as any)?.role || 'STAFF') as UserRole;
+
   const initials = session?.user?.name
     ? session.user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
+
+  // Filter nav items based on user role
+  const filteredNavItems = useMemo(() => {
+    // ADMIN sees everything
+    if (userRole === 'ADMIN') return navItems;
+
+    const allowedPaths = ROLE_MENU_ACCESS[userRole] || [];
+    return navItems.filter((item) => allowedPaths.includes(item.href));
+  }, [userRole]);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -168,7 +206,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Navigation */}
         <nav className="sidebar-nav">
           <div className="sidebar-section-label">Menu Utama</div>
-          {navItems.map((item) => (
+          {filteredNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -186,7 +224,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="sidebar-user-avatar">{initials}</div>
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{session?.user?.name || 'User'}</div>
-              <div className="sidebar-user-role">{(session?.user as any)?.role || 'STAFF'}</div>
+              <div className="sidebar-user-role">{userRole}</div>
             </div>
             <button
               className="logout-btn"

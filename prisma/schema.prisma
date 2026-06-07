@@ -125,3 +125,32 @@ model PatientSchedule {
 
   @@map("patient_schedules")
 }
+
+enum QueueCategory {
+  POLI
+  DIALISIS
+  OBAT
+}
+
+enum QueueStatus {
+  WAITING
+  CALLED
+  SERVING
+  COMPLETED
+  SKIPPED
+}
+
+model QueueTicket {
+  id          String        @id @default(cuid())
+  category    QueueCategory
+  queueNumber Int
+  patientName String?
+  status      QueueStatus   @default(WAITING)
+  counter     String?
+  calledAt    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("queue_tickets")
+}

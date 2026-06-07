@@ -173,7 +173,9 @@ export default function UserManagementPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const currentUserId = (session?.user as any)?.id;
-  const isAdmin = (session?.user as any)?.role === 'ADMIN';
+  const userRole = (session?.user as any)?.role;
+  const isAdmin = userRole === 'ADMIN';
+  const isSupervisor = userRole === 'SUPERVISOR';
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -436,10 +438,14 @@ export default function UserManagementPage() {
         {/* Info note */}
         {!isAdmin && (
           <div style={{
-            marginTop: 16, padding: '12px 16px', background: '#eff6ff',
-            border: '1px solid #bfdbfe', borderRadius: 10, fontSize: 12, color: '#1d4ed8',
+            marginTop: 16, padding: '12px 16px', background: isSupervisor ? '#fefce8' : '#eff6ff',
+            border: `1px solid ${isSupervisor ? '#fde68a' : '#bfdbfe'}`, borderRadius: 10, fontSize: 12,
+            color: isSupervisor ? '#a16207' : '#1d4ed8',
           }}>
-            ℹ️ Hanya Administrator yang dapat menambah, mengubah, atau menghapus pengguna.
+            {isSupervisor
+              ? '👁️ Mode Supervisor — Anda dapat melihat data pengguna, namun tidak dapat menambah, mengubah, atau menghapus pengguna.'
+              : 'ℹ️ Hanya Administrator yang dapat menambah, mengubah, atau menghapus pengguna.'
+            }
           </div>
         )}
       </div>
