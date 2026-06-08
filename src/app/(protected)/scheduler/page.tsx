@@ -826,7 +826,7 @@ export default function SchedulerPage() {
         {([
           { key: 'beds',     label: '🛏️ Timeline Bed' },
           { key: 'patients', label: '👥 Jadwal Pasien' },
-          { key: 'nurses',   label: '👨‍⚕️ Beban Perawat' },
+          { key: 'nurses',   label: '👨‍⚕️ Jadwal Perawat' },
         ] as const).map((t) => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             style={{ padding: '8px 18px', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: activeTab === t.key ? 700 : 500, fontSize: 13, background: activeTab === t.key ? '#fff' : 'transparent', color: activeTab === t.key ? '#1e6fa6' : '#64748b', boxShadow: activeTab === t.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
