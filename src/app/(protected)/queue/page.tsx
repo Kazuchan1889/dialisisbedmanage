@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface QueueTicket {
@@ -18,9 +18,9 @@ interface QueueTicket {
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const CATEGORIES = [
-  { key: 'POLI',     label: 'Poli',     emoji: '🏥', prefix: 'A', color: '#1e6fa6', bg: '#eff6ff', border: '#bfdbfe', headerBg: 'linear-gradient(135deg, #1e6fa6, #3b82f6)', lightBg: '#f0f7ff' },
-  { key: 'DIALISIS', label: 'Dialisis', emoji: '💉', prefix: 'B', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', headerBg: 'linear-gradient(135deg, #059669, #34d399)', lightBg: '#f0fdf8' },
-  { key: 'OBAT',     label: 'Obat',     emoji: '💊', prefix: 'C', color: '#d97706', bg: '#fffbeb', border: '#fde68a', headerBg: 'linear-gradient(135deg, #d97706, #fbbf24)', lightBg: '#fffdf5' },
+  { key: 'POLI',     label: 'Poli Penyakit Dalam',  emoji: '🏥', prefix: 'A', color: '#1e6fa6', bg: '#eff6ff', border: '#bfdbfe', headerBg: 'linear-gradient(135deg, #1e6fa6, #3b82f6)', lightBg: '#f0f7ff' },
+  { key: 'DIALISIS', label: 'Poli Hemodialisa',      emoji: '💉', prefix: 'B', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', headerBg: 'linear-gradient(135deg, #059669, #34d399)', lightBg: '#f0fdf8' },
+  { key: 'OBAT',     label: 'Farmasi',               emoji: '💊', prefix: 'C', color: '#d97706', bg: '#fffbeb', border: '#fde68a', headerBg: 'linear-gradient(135deg, #d97706, #fbbf24)', lightBg: '#fffdf5' },
 ];
 
 const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; icon: string }> = {
@@ -43,7 +43,56 @@ function fmtDate(ds: string) {
   return new Date(ds + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/* ─── Text-to-Speech Helper ──────────────────────────────────── */
+const DIGIT_WORDS: Record<string, string> = {
+  '0': 'kosong', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat',
+  '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan',
+};
+
+function speakTicket(prefix: string, num: number, counter?: string, categoryLabel?: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const numStr = String(num).padStart(3, '0');
+  const spokenDigits = numStr.split('').map(d => DIGIT_WORDS[d] || d).join(' ');
+
+  let text = `Nomor antrian, ${prefix}, ${spokenDigits}`;
+  if (counter) {
+    text += `, silakan menuju ke ${counter}.`;
+  } else if (categoryLabel) {
+    text += `, silakan menuju ke bagian ${categoryLabel}.`;
+  } else {
+    text += `, silakan menuju ke loket.`;
+  }
+
+  // Repeat announcement for clarity
+  const fullText = text + ' ... ' + text;
+
+  const utterance = new SpeechSynthesisUtterance(fullText);
+  utterance.lang = 'id-ID';
+  utterance.rate = 0.82;
+  utterance.volume = 1;
+
+  // Find Indonesian voice
+  const voices = window.speechSynthesis.getVoices();
+  const idVoice = voices.find(v => v.lang.startsWith('id') || v.lang.includes('ID'));
+  if (idVoice) {
+    utterance.voice = idVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
 /* ─── Main Page Component ────────────────────────────────────── */
+interface PatientOption {
+  id: string;
+  name: string;
+  mrNumber: string;
+  title?: string | null;
+}
+
 export default function QueuePage() {
   const [activeCategory, setActiveCategory] = useState('POLI');
   const [tickets, setTickets] = useState<QueueTicket[]>([]);
@@ -52,6 +101,14 @@ export default function QueuePage() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [newPatientName, setNewPatientName] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Patient autocomplete state
+  const [patientQuery, setPatientQuery] = useState('');
+  const [patientSuggestions, setPatientSuggestions] = useState<PatientOption[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
 
   // Counter configuration, persisted in localStorage
   const [myCounter, setMyCounter] = useState(() => {
@@ -66,6 +123,53 @@ export default function QueuePage() {
   }, [myCounter]);
 
   const cat = CATEGORIES.find(c => c.key === activeCategory) || CATEGORIES[0];
+
+  /* ─── Patient search autocomplete ──────────────────────── */
+  const searchPatients = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setPatientSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    setLoadingSuggestions(true);
+    try {
+      const res = await fetch(`/api/patients?search=${encodeURIComponent(query)}&limit=10&page=1`);
+      const data = await res.json();
+      setPatientSuggestions(data.patients || []);
+      setShowSuggestions(true);
+    } catch (err) {
+      console.error('Failed to search patients:', err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, []);
+
+  const handlePatientInputChange = (value: string) => {
+    setPatientQuery(value);
+    setNewPatientName(value);
+    // Debounce search
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => searchPatients(value), 300);
+  };
+
+  const selectPatient = (patient: PatientOption) => {
+    const displayName = patient.title ? `${patient.title} ${patient.name}` : patient.name;
+    setNewPatientName(displayName);
+    setPatientQuery(displayName);
+    setShowSuggestions(false);
+    setPatientSuggestions([]);
+  };
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   /* ─── Fetch tickets ─────────────────────────────────────── */
   const fetchTickets = useCallback(async () => {
@@ -97,6 +201,8 @@ export default function QueuePage() {
         body: JSON.stringify({ category: activeCategory, patientName: newPatientName || null }),
       });
       setNewPatientName('');
+      setPatientQuery('');
+      setPatientSuggestions([]);
       setShowNewModal(false);
       fetchTickets();
     } catch (err) {
@@ -114,6 +220,15 @@ export default function QueuePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, counter }),
       });
+
+      // Speak announcement when calling a patient
+      if (status === 'CALLED') {
+        const ticket = tickets.find(t => t.id === id);
+        if (ticket) {
+          speakTicket(cat.prefix, ticket.queueNumber, counter, cat.label);
+        }
+      }
+
       fetchTickets();
     } catch (err) {
       console.error('Failed to update ticket:', err);
@@ -429,18 +544,77 @@ export default function QueuePage() {
               <button className="queue-modal-close" onClick={() => setShowNewModal(false)}>✕</button>
             </div>
             <div className="queue-modal-body">
-              <label className="queue-modal-label">Nama Pasien (opsional)</label>
-              <input
-                className="queue-modal-input"
-                type="text"
-                placeholder="Masukkan nama pasien..."
-                value={newPatientName}
-                onChange={e => setNewPatientName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && createTicket()}
-                autoFocus
-              />
+              <label className="queue-modal-label">Nama Pasien</label>
+              <div ref={autocompleteRef} style={{ position: 'relative' }}>
+                <input
+                  className="queue-modal-input"
+                  type="text"
+                  placeholder="Ketik nama pasien untuk mencari..."
+                  value={patientQuery}
+                  onChange={e => handlePatientInputChange(e.target.value)}
+                  onFocus={() => { if (patientSuggestions.length > 0) setShowSuggestions(true); }}
+                  onKeyDown={e => e.key === 'Enter' && createTicket()}
+                  autoFocus
+                  autoComplete="off"
+                />
+                {/* Loading indicator */}
+                {loadingSuggestions && (
+                  <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                    <div className="spinner" style={{ width: 16, height: 16 }} />
+                  </div>
+                )}
+                {/* Dropdown suggestions */}
+                {showSuggestions && patientSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 220, overflowY: 'auto',
+                    marginTop: 4,
+                  }}>
+                    {patientSuggestions.map(p => (
+                      <div
+                        key={p.id}
+                        onClick={() => selectPatient(p)}
+                        style={{
+                          padding: '10px 14px', cursor: 'pointer', display: 'flex',
+                          alignItems: 'center', gap: 10, borderBottom: '1px solid #f1f5f9',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#f0f7ff')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <div style={{
+                          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                          background: 'linear-gradient(135deg, #1e6fa6, #3b82f6)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 11, fontWeight: 700, color: '#fff',
+                        }}>
+                          {p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {p.title ? `${p.title} ${p.name}` : p.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#94a3b8' }}>MR: {p.mrNumber}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* No results */}
+                {showSuggestions && patientQuery.length >= 2 && patientSuggestions.length === 0 && !loadingSuggestions && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)', padding: '14px',
+                    marginTop: 4, textAlign: 'center', fontSize: 13, color: '#94a3b8',
+                  }}>
+                    Pasien tidak ditemukan — nama akan digunakan langsung
+                  </div>
+                )}
+              </div>
               <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
-                Nomor antrian akan diberikan secara otomatis dengan prefix <strong>{cat.prefix}</strong>
+                Ketik minimal 2 huruf untuk mencari pasien. Nomor antrian otomatis dengan prefix <strong>{cat.prefix}</strong>
               </p>
             </div>
             <div className="queue-modal-footer">

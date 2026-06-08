@@ -29,42 +29,40 @@ type AllCategoriesData = Record<string, CategoryData>;
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const CATEGORIES = [
-  { key: 'POLI',     label: 'Poli',     emoji: '🏥', prefix: 'A', accent: '#3b82f6', accentLight: '#93c5fd', gradient: 'linear-gradient(135deg, #162a45, #1e6fa6)', cardBg: 'rgba(30,111,166,0.15)', cardBorder: 'rgba(59,130,246,0.35)' },
-  { key: 'DIALISIS', label: 'Dialisis', emoji: '💉', prefix: 'B', accent: '#10b981', accentLight: '#a7f3d0', gradient: 'linear-gradient(135deg, #0a3625, #059669)', cardBg: 'rgba(5,150,105,0.15)', cardBorder: 'rgba(52,211,153,0.35)' },
-  { key: 'OBAT',     label: 'Obat',     emoji: '💊', prefix: 'C', accent: '#f59e0b', accentLight: '#fde68a', gradient: 'linear-gradient(135deg, #5c2c04, #d97706)', cardBg: 'rgba(217,119,6,0.15)',  cardBorder: 'rgba(251,191,36,0.35)' },
+  { key: 'POLI',     label: 'Poli Penyakit Dalam',  emoji: '🏥', prefix: 'A', accent: '#3b82f6', accentLight: '#93c5fd', gradient: 'linear-gradient(135deg, #162a45, #1e6fa6)', cardBg: 'rgba(30,111,166,0.15)', cardBorder: 'rgba(59,130,246,0.35)' },
+  { key: 'DIALISIS', label: 'Poli Hemodialisa',      emoji: '💉', prefix: 'B', accent: '#10b981', accentLight: '#a7f3d0', gradient: 'linear-gradient(135deg, #0a3625, #059669)', cardBg: 'rgba(5,150,105,0.15)', cardBorder: 'rgba(52,211,153,0.35)' },
+  { key: 'OBAT',     label: 'Farmasi',               emoji: '💊', prefix: 'C', accent: '#f59e0b', accentLight: '#fde68a', gradient: 'linear-gradient(135deg, #5c2c04, #d97706)', cardBg: 'rgba(217,119,6,0.15)',  cardBorder: 'rgba(251,191,36,0.35)' },
 ];
 
 /* Helper for Text-to-Speech */
+const DIGIT_WORDS: Record<string, string> = {
+  '0': 'kosong', '1': 'satu', '2': 'dua', '3': 'tiga', '4': 'empat',
+  '5': 'lima', '6': 'enam', '7': 'tujuh', '8': 'delapan', '9': 'sembilan',
+};
+
 const speakTicket = (categoryLabel: string, prefix: string, num: number, counter?: string | null) => {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-  const numStr = String(num).padStart(3, '0');
-  const dict: Record<string, string> = {
-    '0': 'kosong',
-    '1': 'satu',
-    '2': 'dua',
-    '3': 'tiga',
-    '4': 'empat',
-    '5': 'lima',
-    '6': 'enam',
-    '7': 'tujuh',
-    '8': 'delapan',
-    '9': 'sembilan'
-  };
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
 
-  const spokenDigits = numStr.split('').map(d => dict[d] || d).join(' ');
+  const numStr = String(num).padStart(3, '0');
+  const spokenDigits = numStr.split('').map(d => DIGIT_WORDS[d] || d).join(' ');
   
-  // Announcement text (Indonesian)
-  let text = `Nomor antrian, ${prefix}, ${spokenDigits}, silakan menuju ke `;
+  let text = `Nomor antrian, ${prefix}, ${spokenDigits}`;
   if (counter) {
-    text += `${counter}.`;
+    text += `, silakan menuju ke ${counter}.`;
   } else {
-    text += `bagian, ${categoryLabel}.`;
+    text += `, silakan menuju ke bagian, ${categoryLabel}.`;
   }
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  // Repeat announcement for clarity
+  const fullText = text + ' ... ' + text;
+
+  const utterance = new SpeechSynthesisUtterance(fullText);
   utterance.lang = 'id-ID';
-  utterance.rate = 0.82; // slightly slower for clarity
+  utterance.rate = 0.82;
+  utterance.volume = 1;
 
   // Find Indonesian voice
   const voices = window.speechSynthesis.getVoices();
@@ -85,8 +83,18 @@ function DisplayContent() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [prevCalled, setPrevCalled] = useState<Record<string, string | null>>({ POLI: null, DIALISIS: null, OBAT: null });
   const [flashCat, setFlashCat] = useState<string | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isFirstFetch = useRef(true);
+
+  // Preload voices on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      // Some browsers fire onvoiceschanged
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+  }, []);
 
   // Authentication Redirect
   useEffect(() => {
@@ -110,7 +118,7 @@ function DisplayContent() {
             setPrevCalled(prev => ({ ...prev, [cat.key]: callKey }));
 
             // Skip voice and flash on first load to prevent noise
-            if (!isFirstFetch.current) {
+            if (!isFirstFetch.current && audioEnabled) {
               setFlashCat(cat.key);
               setTimeout(() => setFlashCat(null), 3000);
               speakTicket(cat.label, cat.prefix, calledTicket.queueNumber, calledTicket.counter);
@@ -133,7 +141,7 @@ function DisplayContent() {
   useEffect(() => {
     if (status === 'authenticated') {
       fetchData();
-      const dataInterval = setInterval(fetchData, 5000);
+      const dataInterval = setInterval(fetchData, 8000);
       const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
       return () => { clearInterval(dataInterval); clearInterval(timeInterval); };
     }
@@ -160,8 +168,45 @@ function DisplayContent() {
   const todayDate = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
   const timeStr = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' });
 
+  // Enable audio handler
+  const enableAudio = () => {
+    // Trigger a silent speech to "unlock" the browser's speech synthesis
+    if (window.speechSynthesis) {
+      const silent = new SpeechSynthesisUtterance('');
+      silent.volume = 0;
+      window.speechSynthesis.speak(silent);
+    }
+    setAudioEnabled(true);
+  };
+
   return (
     <div ref={containerRef} className="qd-root">
+      {/* Audio activation overlay */}
+      {!audioEnabled && (
+        <div
+          onClick={enableAudio}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexDirection: 'column', gap: 16, cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'pulse 2s ease-in-out infinite',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="#fff" />
+              <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" />
+            </svg>
+          </div>
+          <div style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>Klik untuk Mengaktifkan Suara</div>
+          <div style={{ color: '#94a3b8', fontSize: 14 }}>Klik di mana saja untuk mengaktifkan pengumuman suara antrian</div>
+        </div>
+      )}
       {/* ── Top Bar ─────────────────────────────────────── */}
       <div className="qd-topbar">
         <div className="qd-topbar-left">

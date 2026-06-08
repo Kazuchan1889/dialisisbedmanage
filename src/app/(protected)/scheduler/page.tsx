@@ -25,9 +25,9 @@ interface BedData {
 
 /* ─── Constants ──────────────────────────────────────────────── */
 const SHIFTS = [
-  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '06:30–11:30', defaultStart: '06:30', defaultEnd: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '08:30–11:30', defaultStart: '08:30', defaultEnd: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
   { key: 'DAY',     label: 'Siang', emoji: '☀️', timeRange: '12:30–17:30', defaultStart: '12:30', defaultEnd: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', headerBg: 'linear-gradient(135deg,#16a34a,#22c55e)', badgeBg: '#dcfce7' },
-  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '17:30–06:30', defaultStart: '17:30', defaultEnd: '06:30', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '17:30–00:00', defaultStart: '17:30', defaultEnd: '00:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
 ];
 const SESSION_PRESETS = [
   ...SHIFTS,
@@ -58,8 +58,11 @@ function detectSessionKey(startTime: string): string {
   const [h, m] = startTime.split(':').map(Number);
   if (isNaN(h) || isNaN(m)) return 'MORNING';
   const total = h * 60 + m;
-  if (total >= 6 * 60 + 30 && total < 12 * 60 + 30) return 'MORNING';
+  // < 12:30 is Pagi
+  if (total < 12 * 60 + 30) return 'MORNING';
+  // 12:30 to 17:30 is Siang
   if (total >= 12 * 60 + 30 && total < 17 * 60 + 30) return 'DAY';
+  // >= 17:30 is Malam
   return 'NIGHT';
 }
 function ini(name: string) { return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2); }
@@ -85,7 +88,9 @@ function NurseChip({ schedule, onClick }: { schedule: NurseScheduleItem; onClick
 
 /* ─── Patient Chip ───────────────────────────────────────────── */
 function PatientChip({ ps, onClick }: { ps: PatientScheduleItem; onClick: () => void }) {
-  const s = SESSION_PRESETS.find((x) => x.key === ps.sessionType) || SESSION_PRESETS[0];
+  // Dynamically recalculate session type based on actual time to fix bad legacy data
+  const timeBasedSessionKey = detectSessionKey(fmtTime(ps.startTime));
+  const s = SESSION_PRESETS.find((x) => x.key === timeBasedSessionKey) || SESSION_PRESETS[0];
   return (
     <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 14,
       background: s.badgeBg, border: `1.5px solid ${s.border}`, cursor: 'pointer', marginBottom: 3 }}>
@@ -106,7 +111,7 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   const [session,     setSession]     = useState('MORNING');
   const [startDate,   setStartDate]   = useState(date);
   const [endDate,     setEndDate]     = useState(date);
-  const [startTime,   setStartTime]   = useState('06:30');
+  const [startTime,   setStartTime]   = useState('08:30');
   const [endTime,     setEndTime]     = useState('11:30');
   const [patSearch,   setPatSearch]   = useState('');
   const [showSug,     setShowSug]     = useState(false);
@@ -141,11 +146,11 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
 
   // Dynamically update preset tab highlight based on time values
   useEffect(() => {
-    if (startTime === '06:30' && endTime === '11:30') {
+    if (startTime === '08:30' && endTime === '11:30') {
       setSession('MORNING');
     } else if (startTime === '12:30' && endTime === '17:30') {
       setSession('DAY');
-    } else if (startTime === '17:30' && endTime === '06:30') {
+    } else if (startTime === '17:30' && endTime === '00:00') {
       setSession('NIGHT');
     } else {
       setSession('CUSTOM');
@@ -339,7 +344,8 @@ function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
   ps: PatientScheduleItem; bed: BedData; onClose: () => void; onDeleted: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
-  const s = SESSION_PRESETS.find((x) => x.key === ps.sessionType) || SESSION_PRESETS[0];
+  const actualSessionKey = detectSessionKey(fmtTime(ps.startTime));
+  const s = SESSION_PRESETS.find((x) => x.key === actualSessionKey) || SESSION_PRESETS[0];
 
   const handleDelete = async () => {
     if (!confirm('Hapus jadwal pasien ini?')) return;
