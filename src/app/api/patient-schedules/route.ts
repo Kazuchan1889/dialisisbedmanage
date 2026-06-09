@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const sDate = new Date(startDate + 'T00:00:00');
-    const eDate = new Date((endDate || startDate) + 'T00:00:00');
+    const sDate = new Date(startDate + 'T00:00:00+07:00');
+    const eDate = new Date((endDate || startDate) + 'T00:00:00+07:00');
 
     if (sDate > eDate) {
       return NextResponse.json({ error: 'Tanggal mulai harus sebelum tanggal selesai' }, { status: 400 });
@@ -76,8 +76,8 @@ export async function POST(req: NextRequest) {
           patientId,
           patientName,
           sessionType: sessionType || 'MORNING',
-          startTime: new Date(`${ds}T${startTime}:00`),
-          endTime:   new Date(`${endDs}T${endTime}:00`),
+          startTime: new Date(`${ds}T${startTime}:00+07:00`),
+          endTime:   new Date(`${endDs}T${endTime}:00+07:00`),
           notes:     notes || null,
         },
         include: {

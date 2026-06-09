@@ -64,7 +64,7 @@ function stripRepairedPrefix(notes?: string | null) {
 function detectShift(startTime: string): { val: string; label: string; bg: string; color: string } {
   const [h, m] = startTime.split(':').map(Number);
   const total = h * 60 + m;
-  if (total >= 6 * 60 + 30 && total < 12 * 60 + 30)
+  if (total >= 8 * 60 + 30 && total < 12 * 60 + 30)
     return { val: 'MORNING', label: 'Pagi 🌅', bg: '#fef3c7', color: '#d97706' };
   if (total >= 12 * 60 + 30 && total < 17 * 60 + 30)
     return { val: 'DAY', label: 'Siang ☀️', bg: '#dcfce7', color: '#15803d' };
@@ -110,9 +110,9 @@ function SectionHeader({ children, color = '#1e293b' }: { children: React.ReactN
 
 /* ─── Shift presets (aligned with Scheduler page) ───────────── */
 const SHIFT_PRESETS = [
-  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', start: '06:30', end: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', badgeBg: '#fef3c7' },
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', start: '08:30', end: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', badgeBg: '#fef3c7' },
   { key: 'DAY',     label: 'Siang', emoji: '☀️', start: '12:30', end: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', badgeBg: '#dcfce7' },
-  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', start: '17:30', end: '06:30', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', badgeBg: '#dbeafe' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', start: '17:30', end: '00:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', badgeBg: '#dbeafe' },
   { key: 'CUSTOM',  label: 'Custom',emoji: '🕐', start: '08:00', end: '16:00', bg: '#f8fafc', border: '#cbd5e1', color: '#475569', badgeBg: '#f1f5f9' },
 ];
 
@@ -484,7 +484,7 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
     _key: Math.random().toString(36).slice(2),
     nurseId: '', nurseName: '', nurseRole: '',
     startDate: today, endDate: today,
-    startTime: '06:30', endTime: '11:30',
+    startTime: '08:30', endTime: '11:30',
     scheduleNotes: '',
   });
   const [nurseSlots, setNurseSlots] = useState<NurseSlot[]>([makeSlot()]);
@@ -858,11 +858,21 @@ export default function BedModal({ bed, onClose, onSave }: BedModalProps) {
                 </div>
                 {selectedMachineId && (() => {
                   const m = machines.find((m) => m.id === selectedMachineId);
-                  return m ? (
-                    <div style={{ marginTop: 8, padding: '8px 10px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, fontSize: 11, color: '#15803d', fontWeight: 600 }}>
-                      ✅ Terhubung: <strong>{m.machineCode}</strong> — Lantai {m.floor}
+                  if (!m) return null;
+                  const isRusak = m.status === 'MAINTENANCE';
+                  const isRepair = m.status === 'AVAILABLE' && m.notes && m.notes.startsWith('[REPAIRED]');
+                  
+                  const bg = isRusak ? '#ffedd5' : isRepair ? '#fef3c7' : '#f0fdf4';
+                  const border = isRusak ? '#ea580c' : isRepair ? '#fcd34d' : '#86efac';
+                  const color = isRusak ? '#c2410c' : isRepair ? '#b45309' : '#15803d';
+                  const icon = isRusak ? '❌' : isRepair ? '🛠️' : '✅';
+                  const text = isRusak ? 'Rusak' : isRepair ? 'Diperbaiki' : 'Terhubung';
+
+                  return (
+                    <div style={{ marginTop: 8, padding: '8px 10px', background: bg, border: `1px solid ${border}`, borderRadius: 8, fontSize: 11, color, fontWeight: 600 }}>
+                      {icon} {text}: <strong>{m.machineCode}</strong> — Lantai {m.floor}
                     </div>
-                  ) : null;
+                  );
                 })()}
               </div>
 

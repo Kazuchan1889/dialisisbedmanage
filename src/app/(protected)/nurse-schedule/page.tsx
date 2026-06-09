@@ -43,7 +43,7 @@ function ScheduleModal({
   const [selectedNurseId, setSelectedNurseId] = useState('');
   const [scheduleStartDate, setScheduleStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [scheduleEndDate, setScheduleEndDate] = useState(new Date().toISOString().split('T')[0]);
-  const [scheduleStartTime, setScheduleStartTime] = useState('06:30');
+  const [scheduleStartTime, setScheduleStartTime] = useState('08:30');
   const [scheduleEndTime, setScheduleEndTime] = useState('11:30');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -95,7 +95,7 @@ function ScheduleModal({
       const shTotalMins = shHour * 60 + shMin;
 
       let shiftVal = 'NIGHT';
-      if (shTotalMins >= (6 * 60 + 30) && shTotalMins <= (12 * 60)) {
+      if (shTotalMins >= (8 * 60 + 30) && shTotalMins <= (12 * 60)) {
         shiftVal = 'MORNING';
       } else if (shTotalMins >= (12 * 60 + 30) && shTotalMins <= (17 * 60 + 30)) {
         shiftVal = 'DAY';

@@ -60,8 +60,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (machineId) {
       // Connect new machine
-      const targetMachineStatus =
-        status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
+      const newMachine = await prisma.machine.findUnique({ where: { id: machineId } });
+      let targetMachineStatus: any = status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
+      
+      // Preserve MAINTENANCE or REPAIRED status
+      if (newMachine) {
+        if (newMachine.status === 'MAINTENANCE' || (newMachine.status === 'AVAILABLE' && newMachine.notes?.startsWith('[REPAIRED]'))) {
+          targetMachineStatus = newMachine.status;
+        }
+      }
         
       await prisma.machine.update({
         where: { id: machineId },
@@ -73,8 +80,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   } else if (status && bed.machine) {
     // Update current machine status if status changed but machineId wasn't updated
-    const machineStatus =
-      status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
+    let machineStatus: any = status === 'AVAILABLE' ? 'AVAILABLE' : status === 'OCCUPIED' ? 'IN_USE' : 'MAINTENANCE';
+    
+    // Preserve MAINTENANCE or REPAIRED status
+    if (bed.machine.status === 'MAINTENANCE' || (bed.machine.status === 'AVAILABLE' && bed.machine.notes?.startsWith('[REPAIRED]'))) {
+      machineStatus = bed.machine.status;
+    }
+
     await prisma.machine.update({
       where: { id: bed.machine.id },
       data: { status: machineStatus },

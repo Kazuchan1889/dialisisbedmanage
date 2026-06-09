@@ -16,10 +16,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const machineGroups = await prisma.machine.groupBy({
-      by: ['status'],
-      _count: {
-        id: true,
+    const machines = await prisma.machine.findMany({
+      select: {
+        status: true,
+        notes: true,
       },
     });
 
@@ -57,14 +57,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    let totalMachines = 0;
+    let totalMachines = machines.length;
     let machineMaintenance = 0;
+    let machineRepaired = 0;
 
-    for (const group of machineGroups) {
-      const count = group._count.id;
-      totalMachines += count;
-      if (group.status === 'MAINTENANCE') {
-        machineMaintenance += count;
+    for (const machine of machines) {
+      if (machine.status === 'MAINTENANCE') {
+        machineMaintenance++;
+      } else if (machine.status === 'AVAILABLE' && machine.notes && machine.notes.startsWith('[REPAIRED]')) {
+        machineRepaired++;
       }
     }
 
@@ -75,6 +76,7 @@ export async function GET(req: NextRequest) {
       maintenanceBeds,
       totalMachines,
       machineMaintenance,
+      machineRepaired,
       floor2: { total: floor2Total, occupied: floor2Occupied, available: floor2Total - floor2Occupied },
       floor3: { total: floor3Total, occupied: floor3Occupied, available: floor3Total - floor3Occupied },
       occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,

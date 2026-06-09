@@ -10,6 +10,7 @@ interface Stats {
   maintenanceBeds: number;
   totalMachines: number;
   machineMaintenance: number;
+  machineRepaired: number;
   occupancyRate: number;
   floor2: { total: number; occupied: number; available: number };
   floor3: { total: number; occupied: number; available: number };
@@ -284,7 +285,9 @@ export default function DashboardPage() {
                   {[
                     { color: '#10b981', bg: '#ecfdf5', label: 'Tersedia', count: stats!.availableBeds },
                     { color: '#ef4444', bg: '#fef2f2', label: 'Terisi', count: stats!.occupiedBeds },
-                    { color: '#f59e0b', bg: '#fffbeb', label: 'Perawatan', count: stats!.maintenanceBeds },
+                    { color: '#f59e0b', bg: '#fffbeb', label: 'Perawatan Bed', count: stats!.maintenanceBeds },
+                    { color: '#fcd34d', bg: '#fef3c7', label: 'Mesin Diperbaiki', count: stats!.machineRepaired },
+                    { color: '#ea580c', bg: '#ffedd5', label: 'Mesin Rusak', count: stats!.machineMaintenance },
                   ].map((item) => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{

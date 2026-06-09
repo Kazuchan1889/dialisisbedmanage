@@ -50,11 +50,6 @@ const DIGIT_WORDS: Record<string, string> = {
 };
 
 function speakTicket(prefix: string, num: number, counter?: string, categoryLabel?: string) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
-
   const numStr = String(num).padStart(3, '0');
   const spokenDigits = numStr.split('').map(d => DIGIT_WORDS[d] || d).join(' ');
 
@@ -68,21 +63,36 @@ function speakTicket(prefix: string, num: number, counter?: string, categoryLabe
   }
 
   // Repeat announcement for clarity
-  const fullText = text + ' ... ' + text;
+  const fullText = text + '. ' + text;
 
-  const utterance = new SpeechSynthesisUtterance(fullText);
-  utterance.lang = 'id-ID';
-  utterance.rate = 0.82;
-  utterance.volume = 1;
+  // Use Google Translate TTS for 100% consistent Indonesian female voice across all devices
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent(fullText)}`;
+  const audio = new Audio(url);
+  
+  audio.play().catch((err) => {
+    console.warn('Google TTS failed, falling back to Web Speech API:', err);
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.lang = 'id-ID';
+    utterance.rate = 0.82;
+    utterance.volume = 1;
 
-  // Find Indonesian voice
-  const voices = window.speechSynthesis.getVoices();
-  const idVoice = voices.find(v => v.lang.startsWith('id') || v.lang.includes('ID'));
-  if (idVoice) {
-    utterance.voice = idVoice;
-  }
-
-  window.speechSynthesis.speak(utterance);
+    const voices = window.speechSynthesis.getVoices();
+    const preferredNames = ['Gadis', 'Google Bahasa Indonesia', 'Damayanti'];
+    let idVoice = null;
+    for (const name of preferredNames) {
+      idVoice = voices.find(v => v.lang.includes('id') && v.name.includes(name));
+      if (idVoice) break;
+    }
+    if (!idVoice) {
+      idVoice = voices.find(v => v.lang.startsWith('id') || v.lang.includes('ID'));
+    }
+    
+    if (idVoice) utterance.voice = idVoice;
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 /* ─── Main Page Component ────────────────────────────────────── */
