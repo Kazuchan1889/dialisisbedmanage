@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const sDate = new Date(startDate + 'T00:00:00+07:00');
-    const eDate = new Date((endDate || startDate) + 'T00:00:00+07:00');
+    const sDate = new Date(`${startDate}T12:00:00Z`);
+    const eDate = new Date(`${endDate || startDate}T12:00:00Z`);
 
     if (sDate > eDate) {
       return NextResponse.json({ error: 'Tanggal mulai harus sebelum tanggal selesai' }, { status: 400 });
