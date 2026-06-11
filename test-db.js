@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { const s = await prisma.patientSchedule.findMany({ orderBy: { createdAt: 'desc' }, take: 40 }); console.log(s.map(x => ({ pat: x.patientName, c: x.createdAt, s: x.startTime }))); } main().catch(console.error).finally(() => prisma.$disconnect());

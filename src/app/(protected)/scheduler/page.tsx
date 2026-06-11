@@ -40,13 +40,20 @@ const STATUS_META = {
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */
-function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayStr() { 
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function addDays(ds: string, n: number) {
-  const d = new Date(ds + 'T00:00:00'); d.setDate(d.getDate() + n);
+  const d = new Date(`${ds}T12:00:00Z`); 
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().split('T')[0];
 }
 function fmtDate(ds: string) {
-  return new Date(ds + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(`${ds}T12:00:00`).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 function fmtTime(iso: string) {
   const d = new Date(iso);
