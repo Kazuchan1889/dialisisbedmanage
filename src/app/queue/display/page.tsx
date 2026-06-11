@@ -54,35 +54,30 @@ const speakTicket = (categoryLabel: string, prefix: string, num: number, counter
   // Repeat announcement for clarity
   const fullText = text + '. ' + text;
 
-  // Use Google Translate TTS for 100% consistent Indonesian female voice across all devices
-  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=id&q=${encodeURIComponent(fullText)}`;
-  const audio = new Audio(url);
+  // Bebas Error Jaringan: Langsung gunakan Web Speech API
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
   
-  audio.play().catch((err) => {
-    console.warn('Google TTS failed, falling back to Web Speech API:', err);
-    // Fallback if network fails or audio is blocked
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.lang = 'id-ID';
-    utterance.rate = 0.82;
-    utterance.volume = 1;
+  const utterance = new SpeechSynthesisUtterance(fullText);
+  // Kunci Logat di Level Atas
+  utterance.lang = 'id-ID';
+  utterance.rate = 0.85;
+  utterance.volume = 1;
 
-    const voices = window.speechSynthesis.getVoices();
-    // Prioritize known female voices if available
-    const preferredNames = ['Gadis', 'Google Bahasa Indonesia', 'Damayanti'];
-    let idVoice = null;
-    for (const name of preferredNames) {
-      idVoice = voices.find(v => v.lang.includes('id') && v.name.includes(name));
-      if (idVoice) break;
-    }
-    if (!idVoice) {
-      idVoice = voices.find(v => v.lang.startsWith('id') || v.lang.includes('ID'));
-    }
-    
-    if (idVoice) utterance.voice = idVoice;
-    window.speechSynthesis.speak(utterance);
-  });
+  const voices = window.speechSynthesis.getVoices();
+  // Prioritize known female voices if available
+  const preferredNames = ['Gadis', 'Google Bahasa Indonesia', 'Damayanti'];
+  let idVoice = null;
+  for (const name of preferredNames) {
+    idVoice = voices.find(v => v.lang.includes('id') && v.name.includes(name));
+    if (idVoice) break;
+  }
+  if (!idVoice) {
+    idVoice = voices.find(v => v.lang.startsWith('id') || v.lang.includes('ID'));
+  }
+  
+  if (idVoice) utterance.voice = idVoice;
+  window.speechSynthesis.speak(utterance);
 };
 
 /* ─── Display Content ────────────────────────────────────────── */
