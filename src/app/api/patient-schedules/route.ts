@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
   if (bedId) where.bedId = bedId;
 
   if (dateStr) {
-    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
-    const endOfDay   = new Date(`${dateStr}T23:59:59.999Z`);
+    const startOfDay = new Date(`${dateStr}T00:00:00.000+07:00`);
+    const endOfDay   = new Date(`${dateStr}T23:59:59.999+07:00`);
     where.AND = [{ startTime: { lte: endOfDay } }, { endTime: { gte: startOfDay } }];
   }
 
@@ -46,28 +46,38 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { bedId, patientId, patientName, sessionType, startDate, endDate, startTime, endTime, notes } = body;
+    const { bedId, patientId, patientName, sessionType, startDate, endDate, startTime, endTime, notes, dates } = body;
 
     if (!bedId || !patientId || !patientName || !startDate || !startTime || !endTime) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    const sDate = new Date(`${startDate}T12:00:00Z`);
-    const eDate = new Date(`${endDate || startDate}T12:00:00Z`);
+    let targetDates: string[] = [];
 
-    if (sDate > eDate) {
-      return NextResponse.json({ error: 'Tanggal mulai harus sebelum tanggal selesai' }, { status: 400 });
+    if (dates && Array.isArray(dates) && dates.length > 0) {
+      targetDates = dates;
+    } else {
+      const sDate = new Date(`${startDate}T12:00:00Z`);
+      const eDate = new Date(`${endDate || startDate}T12:00:00Z`);
+
+      if (sDate > eDate) {
+        return NextResponse.json({ error: 'Tanggal mulai harus sebelum tanggal selesai' }, { status: 400 });
+      }
+
+      const cur = new Date(sDate);
+      while (cur <= eDate) {
+        targetDates.push(cur.toISOString().split('T')[0]);
+        cur.setDate(cur.getDate() + 1);
+      }
     }
 
     const created: any[] = [];
-    const cur = new Date(sDate);
 
-    while (cur <= eDate) {
-      const ds = cur.toISOString().split('T')[0];
+    for (const ds of targetDates) {
       // Determine endDate for this day (overnight sessions span to next day)
       const isOvernight = startTime > endTime; // e.g. 21:00 > 07:00
       const endDs = isOvernight
-        ? (() => { const d = new Date(cur); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })()
+        ? (() => { const d = new Date(`${ds}T12:00:00Z`); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })()
         : ds;
 
       const record = await prisma.patientSchedule.create({
@@ -85,7 +95,6 @@ export async function POST(req: NextRequest) {
         },
       });
       created.push(record);
-      cur.setDate(cur.getDate() + 1);
     }
 
     // Sync the bed's status and occupant immediately

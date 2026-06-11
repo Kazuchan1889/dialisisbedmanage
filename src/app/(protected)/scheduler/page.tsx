@@ -113,6 +113,10 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   const [endDate,     setEndDate]     = useState(date);
   const [startTime,   setStartTime]   = useState('06:30');
   const [endTime,     setEndTime]     = useState('11:30');
+  const [scheduleMode,setScheduleMode]= useState<'range'|'specific'>('range');
+  const [selectedDays,setSelectedDays]= useState<number[]>([]);
+  const [durationValue, setDurationValue] = useState(1);
+  const [durationUnit, setDurationUnit] = useState<'minggu'|'bulan'>('minggu');
   const [patSearch,   setPatSearch]   = useState('');
   const [showSug,     setShowSug]     = useState(false);
   const [selPatient,  setSelPatient]  = useState<PatientInfo | null>(null);
@@ -164,6 +168,28 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
 
   const handleSave = async () => {
     if (!selPatient) { setError('Pilih pasien terlebih dahulu.'); return; }
+
+    let generatedDates: string[] = [];
+    if (scheduleMode === 'specific') {
+      if (selectedDays.length === 0) { setError('Pilih minimal satu hari.'); return; }
+      const startD = new Date(`${startDate}T12:00:00Z`);
+      const endD = new Date(startD);
+      if (durationUnit === 'minggu') {
+        endD.setDate(endD.getDate() + durationValue * 7);
+      } else {
+        endD.setMonth(endD.getMonth() + durationValue);
+      }
+      const totalDays = Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24));
+      for (let i = 0; i < totalDays; i++) {
+        const cur = new Date(startD);
+        cur.setDate(cur.getDate() + i);
+        if (selectedDays.includes(cur.getDay())) {
+          generatedDates.push(cur.toISOString().split('T')[0]);
+        }
+      }
+      if (generatedDates.length === 0) { setError('Tidak ada tanggal yang sesuai dengan hari pilihan.'); return; }
+    }
+
     setSaving(true); setError('');
     try {
       const res = await fetch('/api/patient-schedules', {
@@ -175,7 +201,8 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
           patientName: selPatient.name, 
           sessionType: detectedKey, // Follow user's input time!
           startDate, 
-          endDate, 
+          endDate: scheduleMode === 'range' ? endDate : undefined,
+          dates: scheduleMode === 'specific' ? generatedDates : undefined,
           startTime, 
           endTime, 
           notes: notes || null 
@@ -260,17 +287,64 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
             )}
           </div>
 
-          {/* Date range */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tanggal Mulai</label>
-              <input type="date" className="form-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </div>
-            <div>
-              <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tanggal Selesai</label>
-              <input type="date" className="form-input" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
+          {/* Mode Selector */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Metode Penjadwalan</label>
+            <div style={{ display: 'flex', gap: 8, background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+              <button type="button" onClick={() => setScheduleMode('range')} style={{ flex: 1, padding: '8px', fontSize: 11, fontWeight: 600, borderRadius: 8, border: 'none', background: scheduleMode === 'range' ? '#fff' : 'transparent', color: scheduleMode === 'range' ? '#1e293b' : '#64748b', boxShadow: scheduleMode === 'range' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', transition: 'all 0.15s' }}>Rentang Tanggal</button>
+              <button type="button" onClick={() => setScheduleMode('specific')} style={{ flex: 1, padding: '8px', fontSize: 11, fontWeight: 600, borderRadius: 8, border: 'none', background: scheduleMode === 'specific' ? '#fff' : 'transparent', color: scheduleMode === 'specific' ? '#1e293b' : '#64748b', boxShadow: scheduleMode === 'specific' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', transition: 'all 0.15s' }}>Pilih Hari Spesifik</button>
             </div>
           </div>
+
+          {scheduleMode === 'range' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tanggal Mulai</label>
+                <input type="date" className="form-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Tanggal Selesai</label>
+                <input type="date" className="form-input" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 12, padding: 12, background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Berlaku Mulai</label>
+                  <input type="date" className="form-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Durasi</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type="number" min={1} max={durationUnit === 'bulan' ? 5 : 12} className="form-input" value={durationValue || ''} onChange={(e) => {
+                      let val = parseInt(e.target.value, 10);
+                      if (isNaN(val)) val = 0;
+                      if (durationUnit === 'bulan' && val > 5) val = 5;
+                      setDurationValue(val);
+                    }} style={{ flex: 1, padding: '7px 8px', fontSize: 12 }} />
+                    <select className="form-input" value={durationUnit} onChange={(e) => {
+                      const newUnit = e.target.value as 'minggu' | 'bulan';
+                      setDurationUnit(newUnit);
+                      if (newUnit === 'bulan' && durationValue > 5) setDurationValue(5);
+                    }} style={{ flex: 1.5, padding: '7px 8px', fontSize: 12 }}>
+                      <option value="minggu">Minggu</option>
+                      <option value="bulan">Bulan</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Pilih Hari</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[{ d: 1, l: 'Sen' }, { d: 2, l: 'Sel' }, { d: 3, l: 'Rab' }, { d: 4, l: 'Kam' }, { d: 5, l: 'Jum' }, { d: 6, l: 'Sab' }, { d: 0, l: 'Min' }].map((day) => (
+                  <button key={day.d} type="button" onClick={() => setSelectedDays(prev => prev.includes(day.d) ? prev.filter(x => x !== day.d) : [...prev, day.d])}
+                    style={{ padding: '6px 12px', fontSize: 11, fontWeight: 600, borderRadius: 20, border: `1px solid ${selectedDays.includes(day.d) ? '#3b82f6' : '#cbd5e1'}`, background: selectedDays.includes(day.d) ? '#eff6ff' : '#fff', color: selectedDays.includes(day.d) ? '#1d4ed8' : '#475569', cursor: 'pointer', transition: 'all 0.15s' }}>
+                    {day.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Time range — always visible, editable */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>

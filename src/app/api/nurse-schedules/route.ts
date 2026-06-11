@@ -21,8 +21,8 @@ export async function GET(req: NextRequest) {
 
   // Date filter (schedules overlapping or occurring on the selected date)
   if (dateStr) {
-    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
-    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
+    const startOfDay = new Date(`${dateStr}T00:00:00.000+07:00`);
+    const endOfDay = new Date(`${dateStr}T23:59:59.999+07:00`);
     
     where.AND = [
       {
