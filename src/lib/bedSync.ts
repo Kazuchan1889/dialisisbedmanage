@@ -40,7 +40,10 @@ export async function syncBedState(bedId: string, options?: SyncOptions) {
 
   if (!bed) return null;
 
-  const activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
+  let activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
+  if (!activePatient && bed.patientSchedules.length > 0) {
+    activePatient = bed.patientSchedules[0];
+  }
   const activeNurse = bed.nurseSchedules[0] || null;
 
   let targetPatientName = bed.patientName;
@@ -146,7 +149,10 @@ export async function syncAllBedsState(floor?: number) {
   });
 
   for (const bed of beds) {
-    const activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
+    let activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
+    if (!activePatient && bed.patientSchedules.length > 0) {
+      activePatient = bed.patientSchedules[0];
+    }
     const activeNurse = bed.nurseSchedules[0] || null;
 
     let targetPatientName = bed.patientName;

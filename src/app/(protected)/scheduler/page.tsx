@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-/* ─── Types ──────────────────────────────────────────────────── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 interface NurseInfo  { id: string; name: string; role: string; username?: string }
 interface PatientInfo { id: string; name: string; mrNumber: string; title?: string | null }
 
@@ -23,15 +23,15 @@ interface BedData {
   patientSchedules: PatientScheduleItem[];
 }
 
-/* ─── Constants ──────────────────────────────────────────────── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Constants Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 const SHIFTS = [
-  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '06:30–11:30', defaultStart: '06:30', defaultEnd: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
-  { key: 'DAY',     label: 'Siang', emoji: '☀️', timeRange: '12:30–17:30', defaultStart: '12:30', defaultEnd: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', headerBg: 'linear-gradient(135deg,#16a34a,#22c55e)', badgeBg: '#dcfce7' },
-  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '17:30–00:00', defaultStart: '17:30', defaultEnd: '00:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
+  { key: 'MORNING', label: 'Pagi',  emoji: '🌅', timeRange: '06:30 - 11:30', defaultStart: '06:30', defaultEnd: '11:30', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', headerBg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', badgeBg: '#fef3c7' },
+  { key: 'DAY',     label: 'Siang', emoji: '☀️', timeRange: '12:30 - 17:30', defaultStart: '12:30', defaultEnd: '17:30', bg: '#f0fdf4', border: '#86efac', color: '#15803d', headerBg: 'linear-gradient(135deg,#16a34a,#22c55e)', badgeBg: '#dcfce7' },
+  { key: 'NIGHT',   label: 'Malam', emoji: '🌙', timeRange: '17:30 - 00:00', defaultStart: '17:30', defaultEnd: '00:00', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', headerBg: 'linear-gradient(135deg,#1e40af,#3b82f6)', badgeBg: '#dbeafe' },
 ];
 const SESSION_PRESETS = [
   ...SHIFTS,
-  { key: 'CUSTOM', label: 'Custom', emoji: '🕐', timeRange: '', defaultStart: '08:00', defaultEnd: '16:00', bg: '#f8fafc', border: '#cbd5e1', color: '#475569', headerBg: '#f1f5f9', badgeBg: '#f1f5f9' },
+  { key: 'CUSTOM', label: 'Custom', emoji: '⏱️', timeRange: '', defaultStart: '08:00', defaultEnd: '16:00', bg: '#f8fafc', border: '#cbd5e1', color: '#475569', headerBg: '#f1f5f9', badgeBg: '#f1f5f9' },
 ];
 const STATUS_META = {
   AVAILABLE:   { dot: '#22c55e', bg: '#ecfdf5', text: '#059669', border: '#bbf7d0', label: 'Tersedia' },
@@ -39,7 +39,7 @@ const STATUS_META = {
   MAINTENANCE: { dot: '#f59e0b', bg: '#fffbeb', text: '#d97706', border: '#fde68a', label: 'Perbaikan'},
 };
 
-/* ─── Helpers ────────────────────────────────────────────────── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 function todayStr() { 
   const d = new Date();
   const y = d.getFullYear();
@@ -74,7 +74,7 @@ function detectSessionKey(startTime: string): string {
 }
 function ini(name: string) { return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2); }
 
-/* ─── Nurse Chip ─────────────────────────────────────────────── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Nurse Chip Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 function NurseChip({ schedule, onClick }: { schedule: NurseScheduleItem; onClick: () => void }) {
   const now = new Date();
   const isActive = now >= new Date(schedule.startTime) && now <= new Date(schedule.endTime);
@@ -86,14 +86,14 @@ function NurseChip({ schedule, onClick }: { schedule: NurseScheduleItem; onClick
       <div style={{ width: 20, height: 20, borderRadius: '50%', background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{ini(schedule.nurse.name)}</div>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 85 }}>{schedule.nurse.name}</div>
-        <div style={{ fontSize: 9, color: '#64748b' }}>{fmtTime(schedule.startTime)}–{fmtTime(schedule.endTime)}</div>
+        <div style={{ fontSize: 9, color: '#64748b' }}>{fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</div>
       </div>
       {isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />}
     </div>
   );
 }
 
-/* ─── Patient Chip ───────────────────────────────────────────── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Patient Chip Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 function PatientChip({ ps, onClick }: { ps: PatientScheduleItem; onClick: () => void }) {
   // Dynamically recalculate session type based on actual time to fix bad legacy data
   const timeBasedSessionKey = detectSessionKey(fmtTime(ps.startTime));
@@ -104,13 +104,13 @@ function PatientChip({ ps, onClick }: { ps: PatientScheduleItem; onClick: () => 
       <span style={{ fontSize: 11 }}>👤</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 85 }}>{ps.patientName}</div>
-        <div style={{ fontSize: 9, color: s.color }}>{s.emoji} {s.label} · {fmtTime(ps.startTime)}–{fmtTime(ps.endTime)}</div>
+        <div style={{ fontSize: 9, color: s.color }}>{s.emoji} {s.label} • {fmtTime(ps.startTime)}-{fmtTime(ps.endTime)}</div>
       </div>
     </div>
   );
 }
 
-/* ═══ PATIENT SCHEDULE MODAL ════════════════════════════════════ */
+/* ═══ PATIENT SCHEDULE MODAL ════════════════════════════════════ */
 function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   bed: BedData; date: string; patients: PatientInfo[];
   onClose: () => void; onSaved: () => void;
@@ -146,12 +146,9 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
     if (key !== 'CUSTOM') {
       setStartTime(sp.defaultStart);
       setEndTime(sp.defaultEnd);
-      if (key === 'NIGHT') setEndDate(addDays(startDate, 1));
-      else setEndDate(startDate);
     } else {
       setStartTime('08:00');
       setEndTime('16:00');
-      setEndDate(startDate);
     }
   };
 
@@ -167,11 +164,6 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
       setSession('CUSTOM');
     }
   }, [startTime, endTime]);
-
-  useEffect(() => {
-    if (session === 'NIGHT') setEndDate(addDays(startDate, 1));
-    else if (session !== 'CUSTOM') setEndDate(startDate);
-  }, [startDate]); // eslint-disable-line
 
   const handleSave = async () => {
     if (!selPatient) { setError('Pilih pasien terlebih dahulu.'); return; }
@@ -228,7 +220,7 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Jadwalkan Pasien</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode} · Lantai {bed.floor} · {bed.section}</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode} • Lantai {bed.floor} • {bed.section}</div>
             </div>
             <button className="modal-close" onClick={onClose}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -353,7 +345,7 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
             </div>
           )}
 
-          {/* Time range — always visible, editable */}
+          {/* Time range Ã¢â‚¬â€ always visible, editable */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
@@ -396,9 +388,9 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
           {/* Session summary */}
           <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: detectedSession.badgeBg, border: `1px solid ${detectedSession.border}` }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: detectedSession.color }}>
-              {detectedSession.emoji} Shift {detectedSession.label}: {startTime} – {endTime}
+              {detectedSession.emoji} Shift {detectedSession.label}: {startTime} - {endTime}
               {session === 'CUSTOM' && <span style={{ fontStyle: 'italic', opacity: 0.8, fontWeight: 500 }}> (Kustom)</span>}
-              {startDate !== endDate && <span style={{ fontWeight: 400 }}> · {startDate} → {endDate}</span>}
+              {startDate !== endDate && <span style={{ fontWeight: 400 }}> • {startDate} → {endDate}</span>}
             </span>
           </div>
 
@@ -420,7 +412,7 @@ function PatientScheduleModal({ bed, date, patients, onClose, onSaved }: {
   );
 }
 
-/* ═══ PATIENT SCHEDULE DETAIL MODAL ════════════════════════════ */
+/* ═══ PATIENT SCHEDULE DETAIL MODAL ════════════════════════════ */
 function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
   ps: PatientScheduleItem; bed: BedData; onClose: () => void; onDeleted: () => void;
 }) {
@@ -442,7 +434,7 @@ function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>👤</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{ps.patientName}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>MR: {ps.patientId} · {s.emoji} Sesi {s.label}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>MR: {ps.patientId} • {s.emoji} Sesi {s.label}</div>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -453,7 +445,7 @@ function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div>
-              <div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} · {bed.section}</div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} • {bed.section}</div>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -468,7 +460,7 @@ function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
           {ps.notes && <div style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#475569', fontStyle: 'italic', marginBottom: 14 }}>"{ps.notes}"</div>}
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Tutup</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️ Hapus'}</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️ Hapus'}</button>
           </div>
         </div>
       </div>
@@ -476,7 +468,7 @@ function PatientScheduleDetailModal({ ps, bed, onClose, onDeleted }: {
   );
 }
 
-/* ═══ NURSE QUICK ASSIGN MODAL ══════════════════════════════════ */
+/* ═══ NURSE QUICK ASSIGN MODAL ══════════════════════════════════ */
 function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
   bed: BedData; shift: typeof SHIFTS[number]; date: string;
   nurses: NurseInfo[]; onClose: () => void; onSaved: () => void;
@@ -553,7 +545,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>Tugaskan Perawat</div>
-              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode}{scheduledPatientName ? ` · ${scheduledPatientName}` : ''}</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{bed.bedCode}{scheduledPatientName ? ` • ${scheduledPatientName}` : ''}</div>
             </div>
             <button className="modal-close" onClick={onClose}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -601,7 +593,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <div style={{ width: 26, height: 26, borderRadius: 7, background: n.role === 'TECHNICIAN' ? 'linear-gradient(135deg,#f59e0b,#fbbf24)' : 'linear-gradient(135deg,#1e6fa6,#2d8fd6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{ini(n.name)}</div>
                               <span style={{ fontWeight: 600, color: '#1e293b' }}>{n.name}</span>
-                              {isAssigned && <span style={{ fontSize: 9, color: '#dc2626', fontWeight: 700 }}>✓ sdh</span>}
+                              {isAssigned && <span style={{ fontSize: 9, color: '#dc2626', fontWeight: 700 }}>✔️ sdh</span>}
                             </div>
                             <span style={{ fontSize: 10, background: n.role === 'TECHNICIAN' ? '#fef3c7' : '#eff6ff', color: n.role === 'TECHNICIAN' ? '#d97706' : '#1d4ed8', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{n.role === 'TECHNICIAN' ? 'Teknisi' : 'Perawat'}</span>
                           </div>
@@ -624,7 +616,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
             </div>
           </div>
 
-          {/* Time range — always editable */}
+          {/* Time range Ã¢â‚¬â€ always editable */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Jam Mulai</label>
@@ -667,8 +659,8 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
           {/* Summary */}
           <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 10, background: activeSh.badgeBg, border: `1px solid ${activeSh.border}` }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: activeSh.color }}>
-              {activeSh.emoji} Shift {activeSh.label}: {startTime} – {endTime}
-              {startDate !== endDate && <span style={{ fontWeight: 400 }}> · {startDate} → {endDate}</span>}
+              {activeSh.emoji} Shift {activeSh.label}: {startTime} - {endTime}
+              {startDate !== endDate && <span style={{ fontWeight: 400 }}> • {startDate} → {endDate}</span>}
             </span>
           </div>
 
@@ -685,7 +677,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
             <label style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Catatan (opsional)</label>
             <input type="text" className="form-input" placeholder="Misal: Pendampingan cuci darah sesi pagi" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          {alreadyAssigned.length >= 5 && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>⚠️ Bed ini sudah memiliki 5 perawat di shift ini.</div>}
+          {alreadyAssigned.length >= 5 && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>⚠️ Bed ini sudah memiliki 5 perawat di shift ini.</div>}
         </div>
 
         <div style={{ padding: '14px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -699,7 +691,7 @@ function NurseAssignModal({ bed, shift, date, nurses, onClose, onSaved }: {
   );
 }
 
-/* ═══ NURSE SCHEDULE DETAIL MODAL ═══════════════════════════════ */
+/* ═══ NURSE SCHEDULE DETAIL MODAL ═══════════════════════════════ */
 function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: NurseScheduleItem; bed: BedData; onClose: () => void; onDeleted: () => void }) {
   const [deleting, setDeleting] = useState(false);
   const shift = SHIFTS.find((s) => s.key === schedule.shift) || SHIFTS[0];
@@ -725,7 +717,7 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
           <div style={{ width: 40, height: 40, borderRadius: 12, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{ini(schedule.nurse.name)}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{schedule.nurse.name}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{schedule.nurse.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Perawat'} · {shift.emoji} Shift {shift.label}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{schedule.nurse.role === 'TECHNICIAN' ? 'Ã°Å¸â€Â§ Teknisi' : '👤 Perawat'} • {shift.emoji} Shift {shift.label}</div>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -734,7 +726,7 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '10px 14px', background: '#f8fafc', borderRadius: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
-            <div><div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div><div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} · {bed.section}{scheduledPatientName ? ` · ${scheduledPatientName}` : ''}</div></div>
+            <div><div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div><div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} • {bed.section}{scheduledPatientName ? ` • ${scheduledPatientName}` : ''}</div></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
             {[{ label: 'Mulai', time: schedule.startTime }, { label: 'Selesai', time: schedule.endTime }].map(({ label, time }) => (
@@ -748,7 +740,7 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
           {schedule.notes && <div style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#475569', fontStyle: 'italic', marginBottom: 12 }}>"{schedule.notes}"</div>}
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Tutup</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️ Hapus Jadwal'}</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️ Hapus Jadwal'}</button>
           </div>
         </div>
       </div>
@@ -756,7 +748,7 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
   );
 }
 
-/* ═══ MAIN PAGE ══════════════════════════════════════════════════ */
+/* ═══ MAIN PAGE ══════════════════════════════════════════════════ */
 export default function SchedulerPage() {
   const [date,            setDate]            = useState(todayStr);
   const [floorFilter,     setFloorFilter]     = useState('all');
@@ -769,6 +761,36 @@ export default function SchedulerPage() {
   const [nurseDetail,     setNurseDetail]     = useState<{ schedule: NurseScheduleItem; bed: BedData } | null>(null);
   const [patientModal,    setPatientModal]    = useState<{ bed: BedData } | null>(null);
   const [patientDetail,   setPatientDetail]   = useState<{ ps: PatientScheduleItem; bed: BedData } | null>(null);
+
+  const deleteAllNurseSchedules = async () => {
+    if (!confirm('AWAS! Anda yakin ingin menghapus SEMUA jadwal perawat di sistem? Aksi ini tidak dapat dibatalkan.')) return;
+    const pwd = prompt('Ketik "HAPUS" untuk melanjutkan:');
+    if (pwd !== 'HAPUS') return;
+
+    try {
+      const res = await fetch('/api/nurse-schedules', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Gagal menghapus jadwal perawat.');
+      fetchBeds();
+      alert('Semua jadwal perawat berhasil dihapus.');
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const deleteAllSchedules = async () => {
+    if (!confirm('AWAS! Anda yakin ingin menghapus SEMUA jadwal pasien di sistem? Aksi ini tidak dapat dibatalkan.')) return;
+    const pwd = prompt('Ketik "HAPUS" untuk melanjutkan:');
+    if (pwd !== 'HAPUS') return;
+
+    try {
+      const res = await fetch('/api/patient-schedules', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Gagal menghapus jadwal.');
+      fetchBeds();
+      alert('Semua jadwal pasien berhasil dihapus.');
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
 
   const fetchBeds = useCallback(async () => {
     setLoading(true);
@@ -879,7 +901,7 @@ export default function SchedulerPage() {
           {SHIFTS.map((s) => (
             <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 20, background: s.badgeBg, border: `1px solid ${s.border}` }}>
               <span style={{ fontSize: 11 }}>{s.emoji}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: s.color }}>{s.label} · {s.timeRange}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: s.color }}>{s.label} • {s.timeRange}</span>
             </div>
           ))}
         </div>
@@ -890,9 +912,9 @@ export default function SchedulerPage() {
         {[
           { label: 'Total Bed', value: stats.totalBeds, icon: '🛏️', color: '#1e6fa6', bg: '#eff6ff' },
           { label: 'Jadwal Pasien', value: stats.totalPatSch, icon: '👥', color: '#059669', bg: '#f0fdf4' },
-          { label: 'Bed Ada Perawat', value: stats.bedsWithNurse, icon: '👨‍⚕️', color: '#7c3aed', bg: '#f5f3ff' },
+          { label: 'Bed Ada Perawat', value: stats.bedsWithNurse, icon: '👩‍⚕️', color: '#7c3aed', bg: '#f5f3ff' },
           { label: 'Perawat Bertugas', value: stats.uniqueNurses, icon: '⭐', color: '#d97706', bg: '#fffbeb' },
-          { label: 'Total Jadwal Ns', value: stats.totalNurseSch, icon: '📋', color: '#dc2626', bg: '#fef2f2' },
+          { label: 'Total Jadwal Ns', value: stats.totalNurseSch, icon: '📝', color: '#dc2626', bg: '#fef2f2' },
         ].map((s) => (
           <div key={s.label} style={{ background: s.bg, borderRadius: 12, padding: '12px 14px', textAlign: 'center' }}>
             <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
@@ -903,11 +925,11 @@ export default function SchedulerPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, background: '#f1f5f9', borderRadius: 10, padding: 3, marginBottom: 16, width: 'fit-content' }}>
+      <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: 4, borderRadius: 10, marginBottom: 20 }}>
         {([
           { key: 'beds',     label: '🛏️ Timeline Bed' },
           { key: 'patients', label: '👥 Jadwal Pasien' },
-          { key: 'nurses',   label: '👨‍⚕️ Jadwal Perawat' },
+          { key: 'nurses',   label: '👩‍⚕️ Jadwal Perawat' },
         ] as const).map((t) => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             style={{ padding: '8px 18px', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: activeTab === t.key ? 700 : 500, fontSize: 13, background: activeTab === t.key ? '#fff' : 'transparent', color: activeTab === t.key ? '#1e6fa6' : '#64748b', boxShadow: activeTab === t.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.15s' }}>
@@ -922,7 +944,7 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ══ BED TIMELINE ══ */}
+      {/* ══ BED TIMELINE ══ */}
       {!loading && activeTab === 'beds' && (
         <div style={{ overflowX: 'auto' }}>
           {beds.length === 0
@@ -930,7 +952,7 @@ export default function SchedulerPage() {
             : Array.from(bedsByFloor.entries()).map(([floor, floorBeds]) => (
               <div key={floor} style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                  <div style={{ padding: '4px 14px', background: 'linear-gradient(135deg,#1e6fa6,#2563eb)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>🏥 Lantai {floor}</div>
+                  <div style={{ padding: '4px 14px', background: 'linear-gradient(135deg,#1e6fa6,#2563eb)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>🏢 Lantai {floor}</div>
                   <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
                   <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{floorBeds.length} bed</span>
                 </div>
@@ -967,7 +989,7 @@ export default function SchedulerPage() {
                               ))
                               : <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic', marginBottom: 4 }}>Belum ada pasien terjadwal</div>
                             }
-                            {bed.machine && <div style={{ fontSize: 9, color: '#059669', fontWeight: 600 }}>🔌 {bed.machine.machineCode}</div>}
+                            {bed.machine && <div style={{ fontSize: 9, color: '#059669', fontWeight: 600 }}>⚙️ {bed.machine.machineCode}</div>}
                           </div>
                           {/* Schedule patient button */}
                           <button onClick={() => setPatientModal({ bed })}
@@ -1005,19 +1027,16 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ══ PATIENT SCHEDULES TAB ══ */}
+      {/* ══ PATIENT SCHEDULES TAB ══ */}
       {!loading && activeTab === 'patients' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
-              {allPatientSchedules.length > 0 ? `${allPatientSchedules.length} jadwal pasien untuk ${fmtDate(date)}` : `Belum ada jadwal pasien untuk ${fmtDate(date)}`}
-            </div>
-          </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{allPatientSchedules.length > 0 ? `${allPatientSchedules.length} jadwal pasien untuk ${fmtDate(date)}` : `Belum ada jadwal pasien untuk ${fmtDate(date)}`}</div><button onClick={deleteAllSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Hapus Semua</button></div>
 
           {allPatientSchedules.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada pasien yang dijadwalkan</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🛏️</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada pasien yang dijadwalkan</div>
               <div style={{ fontSize: 12, marginTop: 8 }}>Buka tab Timeline Bed dan klik "Jadwalkan Pasien" di bed yang diinginkan</div>
             </div>
           ) : (
@@ -1042,8 +1061,8 @@ export default function SchedulerPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: sm.dot, flexShrink: 0 }} />
                         <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</span>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>Lantai {bed.floor} · {bed.section}</span>
-                        {bed.machine && <span style={{ fontSize: 10, color: '#059669', fontWeight: 600, marginLeft: 'auto' }}>🔌 {bed.machine.machineCode}</span>}
+                        <span style={{ fontSize: 11, color: '#64748b' }}>Lantai {bed.floor} • {bed.section}</span>
+                        {bed.machine && <span style={{ fontSize: 10, color: '#059669', fontWeight: 600, marginLeft: 'auto' }}>⚙️ {bed.machine.machineCode}</span>}
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
@@ -1070,12 +1089,19 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ══ NURSE WORKLOAD TAB ══ */}
+      {/* ══ NURSE WORKLOAD TAB ══ */}
       {!loading && activeTab === 'nurses' && (
-        <div>
-          {nurseWorkload.length === 0 ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
+                {nurseWorkload.length > 0 ? `${nurseWorkload.length} perawat dijadwalkan untuk ${fmtDate(date)}` : `Belum ada jadwal perawat untuk ${fmtDate(date)}`}
+              </div>
+              <button onClick={deleteAllNurseSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Hapus Semua</button>
+            </div>
+
+            {nurseWorkload.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>👨‍⚕️</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>👩‍⚕️</div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada perawat yang dijadwalkan</div>
             </div>
           ) : (
@@ -1091,7 +1117,7 @@ export default function SchedulerPage() {
                       <div style={{ width: 44, height: 44, borderRadius: 12, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{ini(nurse.name)}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>{nurse.name}</div>
-                        <div style={{ fontSize: 11, color: '#64748b' }}>{nurse.role === 'TECHNICIAN' ? '🔧 Teknisi' : '👤 Perawat / Staff'}</div>
+                        <div style={{ fontSize: 11, color: '#64748b' }}>{nurse.role === 'TECHNICIAN' ? '⚙️ Teknisi' : '🩺 Perawat / Staff'}</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 20, fontWeight: 900, color: wColor }}>{totalBeds}</div>
@@ -1118,8 +1144,8 @@ export default function SchedulerPage() {
                                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: shift.badgeBg, border: `1px solid ${shift.border}`, borderRadius: 16, cursor: 'pointer' }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={shift.color} strokeWidth="2.5"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
                                   <span style={{ fontSize: 10, fontWeight: 700, color: shift.color }}>{bed.bedCode}</span>
-                                  {scheduledPatName && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>· {scheduledPatName.split(' ')[0]}</span>}
-                                  <span style={{ fontSize: 9, color: shift.color, opacity: 0.6 }}>· {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
+                                  {scheduledPatName && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>• {scheduledPatName.split(' ')[0]}</span>}
+                                    <span style={{ fontSize: 9, color: shift.color, opacity: 0.8 }}>• {new Date(schedule.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
                                 </div>
                               );
                             })}
@@ -1135,7 +1161,7 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ── Modals ── */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Modals Ã¢â€â‚¬Ã¢â€â‚¬ */}
       {nurseModal && <NurseAssignModal bed={nurseModal.bed} shift={nurseModal.shift} date={date} nurses={nurses} onClose={() => setNurseModal(null)} onSaved={fetchBeds} />}
       {nurseDetail && <NurseDetailModal schedule={nurseDetail.schedule} bed={nurseDetail.bed} onClose={() => setNurseDetail(null)} onDeleted={fetchBeds} />}
       {patientModal && <PatientScheduleModal bed={patientModal.bed} date={date} patients={patients} onClose={() => setPatientModal(null)} onSaved={fetchBeds} />}
@@ -1143,3 +1169,15 @@ export default function SchedulerPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

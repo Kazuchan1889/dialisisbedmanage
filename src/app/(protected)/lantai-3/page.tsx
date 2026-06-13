@@ -50,6 +50,25 @@ export default function Lantai3Page() {
     fetchBeds(); // Reload beds to ensure machine statuses sync
   };
 
+  const clearAllBeds = async () => {
+    if (!confirm('AWAS! Anda yakin ingin mengosongkan SEMUA bed di Lantai 3? Status bed akan menjadi Tersedia dan data pasien dihapus.')) return;
+    const pwd = prompt('Ketik "KOSONG" untuk melanjutkan:');
+    if (pwd !== 'KOSONG') return;
+    
+    try {
+      const res = await fetch('/api/beds/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ floor: 3 })
+      });
+      if (!res.ok) throw new Error('Gagal mengosongkan bed');
+      alert('Semua bed di Lantai 3 berhasil dikosongkan.');
+      fetchBeds();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   const stats = {
     available: beds.filter((b) => b.status === 'AVAILABLE' && !isMachineDamagedOrRepaired(b.machine)).length,
     occupied: beds.filter((b) => b.status === 'OCCUPIED' && !isMachineDamagedOrRepaired(b.machine)).length,
@@ -86,6 +105,13 @@ export default function Lantai3Page() {
           <div className="topbar-date">Klinik Utama Jakarta Kidney Center</div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <button 
+            onClick={clearAllBeds} 
+            style={{ padding: '8px 16px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            Kosongkan Semua Bed
+          </button>
           <div className="floor-legend">
             <div className="legend-item">
               <div className="legend-dot" style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0' }} />
