@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
 
   // Fetch schedules that overlap with the selected date (UTC range)
   // Use a ±1 day buffer to handle night shifts spanning midnight
-  const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
-  const endOfDay   = new Date(`${dateStr}T23:59:59.999Z`);
+  const startOfDay = new Date(`${dateStr}T00:00:00.000+07:00`);
+  const endOfDay   = new Date(`${dateStr}T23:59:59.999+07:00`);
 
   try {
     // Sync bed states in DB first before fetching
