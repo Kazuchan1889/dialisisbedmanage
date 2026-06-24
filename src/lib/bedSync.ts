@@ -41,9 +41,6 @@ export async function syncBedState(bedId: string, options?: SyncOptions) {
   if (!bed) return null;
 
   let activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
-  if (!activePatient && bed.patientSchedules.length > 0) {
-    activePatient = bed.patientSchedules[0];
-  }
   const activeNurse = bed.nurseSchedules[0] || null;
 
   let targetPatientName = bed.patientName;
@@ -55,7 +52,7 @@ export async function syncBedState(bedId: string, options?: SyncOptions) {
     targetPatientId = activePatient.patientId;
     targetStatus = 'OCCUPIED';
   } else {
-    // No active patient schedule right now.
+    // No active patient schedule right now (either ended or hasn't started).
     let shouldClear = false;
 
     // 1. Explicitly clear if a deleted/modified patient name is provided and matches the current occupant
@@ -64,13 +61,12 @@ export async function syncBedState(bedId: string, options?: SyncOptions) {
     }
 
     // 2. Clear if there was a patient schedule for today that has ended
+    // ATAU jadwal pasien masih di masa depan (belum waktunya).
     if (!shouldClear) {
-      const endedSchedules = bed.patientSchedules.filter(p => p.endTime < now);
-      if (endedSchedules.length > 0) {
-        const matchedEnded = endedSchedules.find(p => p.patientName === bed.patientName);
-        if (matchedEnded) {
-          shouldClear = true;
-        }
+      // Jika tidak ada activePatient, dan saat ini bed masih ada nama pasiennya, kita perlu menghapusnya.
+      // Ini memastikan bed tetap "kosong" sampai jam jadwalnya tiba, dan langsung "kosong" setelah jadwal lewat.
+      if (bed.patientName || bed.patientId) {
+        shouldClear = true;
       }
     }
 
@@ -150,9 +146,6 @@ export async function syncAllBedsState(floor?: number) {
 
   for (const bed of beds) {
     let activePatient = bed.patientSchedules.find(p => p.startTime <= now && p.endTime >= now) || null;
-    if (!activePatient && bed.patientSchedules.length > 0) {
-      activePatient = bed.patientSchedules[0];
-    }
     const activeNurse = bed.nurseSchedules[0] || null;
 
     let targetPatientName = bed.patientName;
@@ -164,15 +157,11 @@ export async function syncAllBedsState(floor?: number) {
       targetPatientId = activePatient.patientId;
       targetStatus = 'OCCUPIED';
     } else {
-      const endedSchedules = bed.patientSchedules.filter(p => p.endTime < now);
-      if (endedSchedules.length > 0) {
-        const matchedEnded = endedSchedules.find(p => p.patientName === bed.patientName);
-        if (matchedEnded) {
-          targetPatientName = null;
-          targetPatientId = null;
-          if (bed.status === 'OCCUPIED') {
-            targetStatus = 'AVAILABLE';
-          }
+      if (bed.patientName || bed.patientId) {
+        targetPatientName = null;
+        targetPatientId = null;
+        if (bed.status === 'OCCUPIED') {
+          targetStatus = 'AVAILABLE';
         }
       }
     }
