@@ -1144,7 +1144,7 @@ export default function SchedulerPage() {
                                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: shift.badgeBg, border: `1px solid ${shift.border}`, borderRadius: 16, cursor: 'pointer' }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={shift.color} strokeWidth="2.5"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
                                   <span style={{ fontSize: 10, fontWeight: 700, color: shift.color }}>{bed.bedCode}</span>
-                                  {scheduledPatName && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>• {scheduledPatName.split(' ')[0]}</span>}
+                                  {scheduledPatName?.trim() && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>• {scheduledPatName.trim().split(' ')[0]}</span>}
                                     <span style={{ fontSize: 9, color: shift.color, opacity: 0.8 }}>• {new Date(schedule.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
                                 </div>
                               );
@@ -1169,6 +1169,7 @@ export default function SchedulerPage() {
     </div>
   );
 }
+
 
 
 
