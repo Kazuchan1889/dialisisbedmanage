@@ -106,9 +106,27 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
-    await prisma.patientSchedule.deleteMany({});
+    const { searchParams } = new URL(req.url);
+    const dateStr = searchParams.get('date');
+    
+    if (dateStr) {
+      const startOfDay = new Date(`${dateStr}T00:00:00.000+07:00`);
+      const endOfDay   = new Date(`${dateStr}T23:59:59.999+07:00`);
+      
+      await prisma.patientSchedule.deleteMany({
+        where: {
+          AND: [
+            { startTime: { lte: endOfDay } },
+            { endTime: { gte: startOfDay } }
+          ]
+        }
+      });
+    } else {
+      await prisma.patientSchedule.deleteMany({});
+    }
+    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

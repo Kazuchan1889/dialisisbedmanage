@@ -48,18 +48,24 @@ export default function Lantai2Page() {
   };
 
   const clearAllBeds = async () => {
-    if (!confirm('AWAS! Anda yakin ingin mengosongkan SEMUA bed di Lantai 2? Status bed akan menjadi Tersedia dan data pasien dihapus.')) return;
+    if (!confirm('AWAS! Anda yakin ingin mengosongkan SEMUA bed di Lantai 2 khusus pada HARI INI? Jadwal esok hari tidak akan terhapus.')) return;
     const pwd = prompt('Ketik "KOSONG" untuk melanjutkan:');
     if (pwd !== 'KOSONG') return;
     
     try {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const todayStr = `${y}-${m}-${day}`;
+
       const res = await fetch('/api/beds/clear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ floor: 2 })
+        body: JSON.stringify({ floor: 2, date: todayStr })
       });
       if (!res.ok) throw new Error('Gagal mengosongkan bed');
-      alert('Semua bed di Lantai 2 berhasil dikosongkan.');
+      alert('Semua bed di Lantai 2 pada hari ini berhasil dikosongkan.');
       fetchBeds();
     } catch (e: any) {
       alert(e.message);

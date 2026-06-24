@@ -215,7 +215,25 @@ export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    await prisma.nurseSchedule.deleteMany({});
+    const { searchParams } = new URL(req.url);
+    const dateStr = searchParams.get('date');
+    
+    if (dateStr) {
+      const startOfDay = new Date(`${dateStr}T00:00:00.000+07:00`);
+      const endOfDay = new Date(`${dateStr}T23:59:59.999+07:00`);
+      
+      await prisma.nurseSchedule.deleteMany({
+        where: {
+          AND: [
+            { startTime: { lte: endOfDay } },
+            { endTime: { gte: startOfDay } }
+          ]
+        }
+      });
+    } else {
+      await prisma.nurseSchedule.deleteMany({});
+    }
+    
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

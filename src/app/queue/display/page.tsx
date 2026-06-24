@@ -249,6 +249,55 @@ function DisplayContent() {
         </div>
       </div>
 
+      {/* ── Doctor Schedules (Dark Theme) ───────────────── */}
+      <div style={{ padding: '0 24px', marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          
+          {/* Dokter Umum */}
+          <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: 12, padding: 16, border: '1px solid rgba(59,130,246,0.2)', borderTop: '4px solid #3b82f6', backdropFilter: 'blur(10px)' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#60a5fa', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Umum</div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>dr. Erin Destrini, MARS</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span>📅</span> Senin - Sabtu &bull; 07:00 - 19:00
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>dr. Fitri Dian Pramesti, MARS, CBS</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span>📅</span> Senin - Sabtu &bull; 07:00 - 19:00
+              </div>
+            </div>
+          </div>
+
+          {/* Sp.PD */}
+          <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: 12, padding: 16, border: '1px solid rgba(16,185,129,0.2)', borderTop: '4px solid #10b981', backdropFilter: 'blur(10px)' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#34d399', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Spesialis Penyakit Dalam</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>dr. Renti Woro Sismiastuti, Sp.PD, FINASIM</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span>📅</span> Senin - Selasa &bull; 09:00 - 10:00
+              </div>
+              <div style={{ fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                <span style={{ visibility: 'hidden' }}>📅</span> Rabu &bull; 14:30 - 15:30
+              </div>
+            </div>
+          </div>
+
+          {/* KGH */}
+          <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: 12, padding: 16, border: '1px solid rgba(245,158,11,0.2)', borderTop: '4px solid #f59e0b', backdropFilter: 'blur(10px)' }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: '#fbbf24', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Konsultan Ginjal Hipertensi</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', lineHeight: 1.4 }}>Prof. DR. dr. Lucky Aziza Bawazier, Sp.PD, KGH, FACP, FINASIM, S.H., M.H.</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <span>📅</span> Senin - Sabtu &bull; 10:00 - 14:00
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* ── Category Columns ────────────────────────────── */}
       <div className="qd-columns">
         {CATEGORIES.map(cat => {

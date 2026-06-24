@@ -763,30 +763,30 @@ export default function SchedulerPage() {
   const [patientDetail,   setPatientDetail]   = useState<{ ps: PatientScheduleItem; bed: BedData } | null>(null);
 
   const deleteAllNurseSchedules = async () => {
-    if (!confirm('AWAS! Anda yakin ingin menghapus SEMUA jadwal perawat di sistem? Aksi ini tidak dapat dibatalkan.')) return;
+    if (!confirm(`AWAS! Anda yakin ingin menghapus SEMUA jadwal perawat pada tanggal ${fmtDate(date)}? Aksi ini tidak dapat dibatalkan.`)) return;
     const pwd = prompt('Ketik "HAPUS" untuk melanjutkan:');
     if (pwd !== 'HAPUS') return;
 
     try {
-      const res = await fetch('/api/nurse-schedules', { method: 'DELETE' });
+      const res = await fetch(`/api/nurse-schedules?date=${date}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus jadwal perawat.');
       fetchBeds();
-      alert('Semua jadwal perawat berhasil dihapus.');
+      alert(`Semua jadwal perawat pada ${fmtDate(date)} berhasil dihapus.`);
     } catch (e: any) {
       alert(e.message);
     }
   };
 
   const deleteAllSchedules = async () => {
-    if (!confirm('AWAS! Anda yakin ingin menghapus SEMUA jadwal pasien di sistem? Aksi ini tidak dapat dibatalkan.')) return;
+    if (!confirm(`AWAS! Anda yakin ingin menghapus SEMUA jadwal pasien pada tanggal ${fmtDate(date)}? Aksi ini tidak dapat dibatalkan.`)) return;
     const pwd = prompt('Ketik "HAPUS" untuk melanjutkan:');
     if (pwd !== 'HAPUS') return;
 
     try {
-      const res = await fetch('/api/patient-schedules', { method: 'DELETE' });
-      if (!res.ok) throw new Error('Gagal menghapus jadwal.');
+      const res = await fetch(`/api/patient-schedules?date=${date}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Gagal menghapus jadwal pasien.');
       fetchBeds();
-      alert('Semua jadwal pasien berhasil dihapus.');
+      alert(`Semua jadwal pasien pada ${fmtDate(date)} berhasil dihapus.`);
     } catch (e: any) {
       alert(e.message);
     }
