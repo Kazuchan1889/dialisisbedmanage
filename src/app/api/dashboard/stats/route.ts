@@ -2,20 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { syncAllBedsState } from '@/lib/bedSync';
+import { isMachineDamagedOrRepaired } from '@/components/BedUnit';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    // We execute only 2 aggregate queries sequentially to minimize connection usage
-    const bedGroups = await prisma.bed.groupBy({
-      by: ['floor', 'status'],
-      _count: {
-        id: true,
-      },
-    });
-
+    const beds = await syncAllBedsState();
     const machines = await prisma.machine.findMany({
       select: {
         status: true,
@@ -23,37 +18,45 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    let totalBeds = 0;
+    let totalBeds = beds.length;
     let occupiedBeds = 0;
     let availableBeds = 0;
     let maintenanceBeds = 0;
+
     let floor2Total = 0;
     let floor2Occupied = 0;
+    let floor2Available = 0;
+    let floor2Maintenance = 0;
+
     let floor3Total = 0;
     let floor3Occupied = 0;
+    let floor3Available = 0;
+    let floor3Maintenance = 0;
 
-    for (const group of bedGroups) {
-      const count = group._count.id;
-      totalBeds += count;
+    for (const bed of beds) {
+      const isDamagedOrRepaired = isMachineDamagedOrRepaired(bed.machine);
+      const isMaintenance = bed.status === 'MAINTENANCE' || isDamagedOrRepaired;
+      const isOccupied = !isMaintenance && bed.status === 'OCCUPIED';
+      const isAvailable = !isMaintenance && bed.status === 'AVAILABLE';
 
-      if (group.status === 'OCCUPIED') {
-        occupiedBeds += count;
-      } else if (group.status === 'AVAILABLE') {
-        availableBeds += count;
-      } else if (group.status === 'MAINTENANCE') {
-        maintenanceBeds += count;
+      if (isMaintenance) {
+        maintenanceBeds++;
+      } else if (isOccupied) {
+        occupiedBeds++;
+      } else if (isAvailable) {
+        availableBeds++;
       }
 
-      if (group.floor === 2) {
-        floor2Total += count;
-        if (group.status === 'OCCUPIED') {
-          floor2Occupied += count;
-        }
-      } else if (group.floor === 3) {
-        floor3Total += count;
-        if (group.status === 'OCCUPIED') {
-          floor3Occupied += count;
-        }
+      if (bed.floor === 2) {
+        floor2Total++;
+        if (isMaintenance) floor2Maintenance++;
+        else if (isOccupied) floor2Occupied++;
+        else if (isAvailable) floor2Available++;
+      } else if (bed.floor === 3) {
+        floor3Total++;
+        if (isMaintenance) floor3Maintenance++;
+        else if (isOccupied) floor3Occupied++;
+        else if (isAvailable) floor3Available++;
       }
     }
 
@@ -77,8 +80,8 @@ export async function GET(req: NextRequest) {
       totalMachines,
       machineMaintenance,
       machineRepaired,
-      floor2: { total: floor2Total, occupied: floor2Occupied, available: floor2Total - floor2Occupied },
-      floor3: { total: floor3Total, occupied: floor3Occupied, available: floor3Total - floor3Occupied },
+      floor2: { total: floor2Total, occupied: floor2Occupied, available: floor2Available, maintenance: floor2Maintenance },
+      floor3: { total: floor3Total, occupied: floor3Occupied, available: floor3Available, maintenance: floor3Maintenance },
       occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,
     });
   } catch (error: any) {
@@ -89,3 +92,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+

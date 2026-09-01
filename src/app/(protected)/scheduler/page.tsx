@@ -717,30 +717,33 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
           <div style={{ width: 40, height: 40, borderRadius: 12, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#fff', flexShrink: 0 }}>{ini(schedule.nurse.name)}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{schedule.nurse.name}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{schedule.nurse.role === 'TECHNICIAN' ? 'Ã°Å¸â€Â§ Teknisi' : '👤 Perawat'} • {shift.emoji} Shift {shift.label}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{schedule.nurse.role === 'TECHNICIAN' ? '⚙️ Teknisi' : '👤 Perawat'} • {shift.emoji} Shift {shift.label}</div>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
         <div style={{ padding: '16px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '10px 14px', background: '#f8fafc', borderRadius: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, padding: '10px 14px', background: '#f8fafc', borderRadius: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
-            <div><div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}</div><div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} • {bed.section}{scheduledPatientName ? ` • ${scheduledPatientName}` : ''}</div></div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>{bed.bedCode}{scheduledPatientName ? ` • ${scheduledPatientName}` : ''}</div>
+              <div style={{ fontSize: 10, color: '#64748b' }}>Lantai {bed.floor} • {bed.section}</div>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             {[{ label: 'Mulai', time: schedule.startTime }, { label: 'Selesai', time: schedule.endTime }].map(({ label, time }) => (
-              <div key={label} style={{ background: shift.bg, border: `1px solid ${shift.border}`, borderRadius: 8, padding: '8px 12px' }}>
+              <div key={label} style={{ background: shift.badgeBg, border: `1px solid ${shift.border}`, borderRadius: 8, padding: '8px 12px' }}>
                 <div style={{ fontSize: 9, color: shift.color, fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{label}</div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>{fmtTime(time)}</div>
                 <div style={{ fontSize: 10, color: '#64748b' }}>{new Date(time).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</div>
               </div>
             ))}
           </div>
-          {schedule.notes && <div style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#475569', fontStyle: 'italic', marginBottom: 12 }}>"{schedule.notes}"</div>}
+          {schedule.notes && <div style={{ padding: '9px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#475569', fontStyle: 'italic', marginBottom: 14 }}>"{schedule.notes}"</div>}
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Tutup</button>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️ Hapus Jadwal'}</button>
+            <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleDelete} disabled={deleting}>{deleting ? 'Menghapus...' : '🗑️  Hapus'}</button>
           </div>
         </div>
       </div>
@@ -748,15 +751,16 @@ function NurseDetailModal({ schedule, bed, onClose, onDeleted }: { schedule: Nur
   );
 }
 
-/* ═══ MAIN PAGE ══════════════════════════════════════════════════ */
+/* ═ ═ ═  MAIN SCHEDULER PAGE ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═  */
 export default function SchedulerPage() {
-  const [date,            setDate]            = useState(todayStr);
+  const [date,            setDate]            = useState(todayStr());
   const [floorFilter,     setFloorFilter]     = useState('all');
-  const [activeTab,       setActiveTab]       = useState<'beds' | 'nurses' | 'patients'>('beds');
+  const [activeTab,       setActiveTab]       = useState<'beds'|'patients'|'nurses'>('beds');
   const [beds,            setBeds]            = useState<BedData[]>([]);
   const [nurses,          setNurses]          = useState<NurseInfo[]>([]);
   const [patients,        setPatients]        = useState<PatientInfo[]>([]);
   const [loading,         setLoading]         = useState(true);
+  const [refreshing,      setRefreshing]      = useState(false);
   const [nurseModal,      setNurseModal]      = useState<{ bed: BedData; shift: typeof SHIFTS[number] } | null>(null);
   const [nurseDetail,     setNurseDetail]     = useState<{ schedule: NurseScheduleItem; bed: BedData } | null>(null);
   const [patientModal,    setPatientModal]    = useState<{ bed: BedData } | null>(null);
@@ -770,7 +774,7 @@ export default function SchedulerPage() {
     try {
       const res = await fetch(`/api/nurse-schedules?date=${date}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus jadwal perawat.');
-      fetchBeds();
+      fetchBeds(true);
       alert(`Semua jadwal perawat pada ${fmtDate(date)} berhasil dihapus.`);
     } catch (e: any) {
       alert(e.message);
@@ -785,21 +789,24 @@ export default function SchedulerPage() {
     try {
       const res = await fetch(`/api/patient-schedules?date=${date}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus jadwal pasien.');
-      fetchBeds();
+      fetchBeds(true);
       alert(`Semua jadwal pasien pada ${fmtDate(date)} berhasil dihapus.`);
     } catch (e: any) {
       alert(e.message);
     }
   };
 
-  const fetchBeds = useCallback(async () => {
-    setLoading(true);
+  const fetchBeds = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
     try {
       const url = `/api/scheduler?date=${date}${floorFilter !== 'all' ? `&floor=${floorFilter}` : ''}`;
       const data = await fetch(url).then((r) => r.json());
       setBeds(Array.isArray(data) ? data : []);
     } catch { setBeds([]); }
-    setLoading(false);
+    finally {
+      setLoading(false);
+      if (!silent) setRefreshing(false);
+    }
   }, [date, floorFilter]);
 
   useEffect(() => { fetchBeds(); }, [fetchBeds]);
@@ -862,7 +869,10 @@ export default function SchedulerPage() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Scheduler</h1>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            Scheduler
+            {refreshing && <span className="spinner" style={{ width: 14, height: 14, display: 'inline-block' }} />}
+          </h1>
           <p className="page-subtitle">Manajemen jadwal pasien & perawat per bed</p>
         </div>
       </div>
@@ -938,14 +948,14 @@ export default function SchedulerPage() {
         ))}
       </div>
 
-      {loading && (
+      {loading && beds.length === 0 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200, gap: 12 }}>
           <span className="spinner" /><span style={{ color: '#64748b', fontSize: 13 }}>Memuat data...</span>
         </div>
       )}
 
-      {/* ══ BED TIMELINE ══ */}
-      {!loading && activeTab === 'beds' && (
+      {/* ═ ═  BED TIMELINE ═ ═  */}
+      {(!loading || beds.length > 0) && activeTab === 'beds' && (
         <div style={{ overflowX: 'auto' }}>
           {beds.length === 0
             ? <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}><div style={{ fontSize: 40 }}>📭</div><div style={{ fontSize: 14, fontWeight: 600, marginTop: 12 }}>Tidak ada bed</div></div>
@@ -974,7 +984,7 @@ export default function SchedulerPage() {
                     const sm = STATUS_META[bed.status];
                     const todayPatients = bed.patientSchedules;
                     return (
-                      <div key={bed.id} style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr 1fr', borderBottom: idx < floorBeds.length - 1 ? '1px solid #f1f5f9' : 'none', minHeight: 80 }}>
+                      <div key={bed.id} id={`bed-row-${bed.bedCode}`} data-bed-code={bed.bedCode} style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr 1fr', borderBottom: idx < floorBeds.length - 1 ? '1px solid #f1f5f9' : 'none', minHeight: 80 }}>
                         {/* Bed info */}
                         <div style={{ padding: '10px 12px', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#fafafa' }}>
                           <div>
@@ -1008,7 +1018,7 @@ export default function SchedulerPage() {
                               {shiftNurses.map((s) => <NurseChip key={s.id} schedule={s} onClick={() => setNurseDetail({ schedule: s, bed })} />)}
                               {canAdd && (
                                 <button onClick={() => setNurseModal({ bed, shift })}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', border: `1.5px dashed ${shift.border}`, borderRadius: 14, background: 'transparent', color: shift.color, fontSize: 9, fontWeight: 700, cursor: 'pointer', opacity: shiftNurses.length === 0 ? 0.5 : 1, marginTop: shiftNurses.length > 0 ? 2 : 0 }}>
+                                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', border: `1.5px dashed ${shift.border}`, borderRadius: 14, background: 'transparent', color: shift.color, fontSize: 9, fontWeight: 700, cursor: 'pointer', opacity: shiftNurses.length === 0 ? 0.5 : 1, marginTop: shiftNurses.length > 0 ? 2 : 0 }}>
                                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
                                   Tugaskan
                                 </button>
@@ -1027,16 +1037,21 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ══ PATIENT SCHEDULES TAB ══ */}
-      {!loading && activeTab === 'patients' && (
+      {/* ═ ═  PATIENT SCHEDULES TAB ═ ═  */}
+      {(!loading || beds.length > 0) && activeTab === 'patients' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{allPatientSchedules.length > 0 ? `${allPatientSchedules.length} jadwal pasien untuk ${fmtDate(date)}` : `Belum ada jadwal pasien untuk ${fmtDate(date)}`}</div><button onClick={deleteAllSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Hapus Semua</button></div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{allPatientSchedules.length > 0 ? `${allPatientSchedules.length} jadwal pasien untuk ${fmtDate(date)}` : `Belum ada jadwal pasien untuk ${fmtDate(date)}`}</div>
+            <button onClick={deleteAllSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Hapus Semua
+            </button>
+          </div>
 
           {allPatientSchedules.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>🛏️</div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada pasien yang dijadwalkan</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada pasien yang dijadwalkan</div>
               <div style={{ fontSize: 12, marginTop: 8 }}>Buka tab Timeline Bed dan klik "Jadwalkan Pasien" di bed yang diinginkan</div>
             </div>
           ) : (
@@ -1089,17 +1104,20 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* ══ NURSE WORKLOAD TAB ══ */}
-      {!loading && activeTab === 'nurses' && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
-                {nurseWorkload.length > 0 ? `${nurseWorkload.length} perawat dijadwalkan untuk ${fmtDate(date)}` : `Belum ada jadwal perawat untuk ${fmtDate(date)}`}
-              </div>
-              <button onClick={deleteAllNurseSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Hapus Semua</button>
+      {/* ═ ═  NURSE WORKLOAD TAB ═ ═  */}
+      {(!loading || beds.length > 0) && activeTab === 'nurses' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>
+              {nurseWorkload.length > 0 ? `${nurseWorkload.length} perawat dijadwalkan untuk ${fmtDate(date)}` : `Belum ada jadwal perawat untuk ${fmtDate(date)}`}
             </div>
+            <button onClick={deleteAllNurseSchedules} style={{ padding: '6px 14px', background: '#fee2e2', border: '1px solid #f87171', color: '#ef4444', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Hapus Semua
+            </button>
+          </div>
 
-            {nurseWorkload.length === 0 ? (
+          {nurseWorkload.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>👩‍⚕️</div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>Belum ada perawat yang dijadwalkan</div>
@@ -1145,7 +1163,7 @@ export default function SchedulerPage() {
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={shift.color} strokeWidth="2.5"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M4 10V6a2 2 0 012-2h12a2 2 0 012 2v4"/></svg>
                                   <span style={{ fontSize: 10, fontWeight: 700, color: shift.color }}>{bed.bedCode}</span>
                                   {scheduledPatName?.trim() && <span style={{ fontSize: 9, color: shift.color, opacity: 0.7 }}>• {scheduledPatName.trim().split(' ')[0]}</span>}
-                                    <span style={{ fontSize: 9, color: shift.color, opacity: 0.8 }}>• {new Date(schedule.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
+                                  <span style={{ fontSize: 9, color: shift.color, opacity: 0.8 }}>• {new Date(schedule.startTime).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, {fmtTime(schedule.startTime)}-{fmtTime(schedule.endTime)}</span>
                                 </div>
                               );
                             })}
@@ -1161,24 +1179,11 @@ export default function SchedulerPage() {
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Modals Ã¢â€â‚¬Ã¢â€â‚¬ */}
-      {nurseModal && <NurseAssignModal bed={nurseModal.bed} shift={nurseModal.shift} date={date} nurses={nurses} onClose={() => setNurseModal(null)} onSaved={fetchBeds} />}
-      {nurseDetail && <NurseDetailModal schedule={nurseDetail.schedule} bed={nurseDetail.bed} onClose={() => setNurseDetail(null)} onDeleted={fetchBeds} />}
-      {patientModal && <PatientScheduleModal bed={patientModal.bed} date={date} patients={patients} onClose={() => setPatientModal(null)} onSaved={fetchBeds} />}
-      {patientDetail && <PatientScheduleDetailModal ps={patientDetail.ps} bed={patientDetail.bed} onClose={() => setPatientDetail(null)} onDeleted={fetchBeds} />}
+      {/* ── Modals ── */}
+      {nurseModal && <NurseAssignModal bed={nurseModal.bed} shift={nurseModal.shift} date={date} nurses={nurses} onClose={() => setNurseModal(null)} onSaved={() => fetchBeds(true)} />}
+      {nurseDetail && <NurseDetailModal schedule={nurseDetail.schedule} bed={nurseDetail.bed} onClose={() => setNurseDetail(null)} onDeleted={() => fetchBeds(true)} />}
+      {patientModal && <PatientScheduleModal bed={patientModal.bed} date={date} patients={patients} onClose={() => setPatientModal(null)} onSaved={() => fetchBeds(true)} />}
+      {patientDetail && <PatientScheduleDetailModal ps={patientDetail.ps} bed={patientDetail.bed} onClose={() => setPatientDetail(null)} onDeleted={() => fetchBeds(true)} />}
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
