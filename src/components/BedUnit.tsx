@@ -31,14 +31,8 @@ interface BedUnitProps {
   showCode?: boolean;
 }
 
-export function isMachineDamagedOrRepaired(machine?: { status: string; notes?: string | null } | null): boolean {
-  if (!machine) return false;
-  if (machine.status === 'MAINTENANCE') return true; // RUSAK
-  if (machine.status === 'AVAILABLE' && machine.notes && machine.notes.startsWith('[REPAIRED]')) {
-    return true; // REPAIRED
-  }
-  return false;
-}
+import { isMachineDamagedOrRepaired } from '@/lib/bedUtils';
+export { isMachineDamagedOrRepaired };
 
 export default function BedUnit({ bed, onClick, showCode = true }: BedUnitProps) {
   const isRusak = bed.machine && bed.machine.status === 'MAINTENANCE';

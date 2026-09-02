@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { syncAllBedsState } from '@/lib/bedSync';
-import { isMachineDamagedOrRepaired } from '@/components/BedUnit';
+import { isMachineDamagedOrRepaired } from '@/lib/bedUtils';
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
