@@ -2,6 +2,7 @@
 
 # ==============================================================================
 # JKC Bed Management System - VPS Ubuntu Deployment & Management Script
+# Web Server: Caddy (Automatic HTTPS / SSL)
 # Domain: jkclin.com
 # ==============================================================================
 
@@ -19,15 +20,17 @@ APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_NAME="jkc-bed-app"
 DOMAIN="jkclin.com"
 PORT=3000
+CADDYFILE="/etc/caddy/Caddyfile"
 
 print_banner() {
     clear
     echo -e "${CYAN}==============================================================================${NC}"
     echo -e "${WHITE}       🏥 JKC Bed Management System - Ubuntu VPS Control Center 🏥           ${NC}"
     echo -e "${CYAN}==============================================================================${NC}"
-    echo -e "${BLUE}  Directory : ${NC}$APP_DIR"
-    echo -e "${BLUE}  Domain    : ${NC}http(s)://$DOMAIN"
-    echo -e "${BLUE}  App Port  : ${NC}$PORT"
+    echo -e "${BLUE}  Directory  : ${NC}$APP_DIR"
+    echo -e "${BLUE}  Domain     : ${NC}https://$DOMAIN"
+    echo -e "${BLUE}  App Port   : ${NC}$PORT (Reverse proxied via Caddy)"
+    echo -e "${BLUE}  Web Server : ${NC}Caddy (Auto HTTPS)"
     echo -e "${CYAN}------------------------------------------------------------------------------${NC}"
 }
 
@@ -49,11 +52,18 @@ run_sudo() {
 }
 
 install_system_dependencies() {
-    echo -e "\n${YELLOW}[1/4] Memeriksa & Menginstall dependensi sistem dasar (curl, git, build-essential)...${NC}"
+    echo -e "\n${YELLOW}[1/4] Memeriksa & Menginstall dependensi sistem (curl, git, build-essential)...${NC}"
     run_sudo apt-get update -y
-    run_sudo apt-get install -y curl git build-essential ufw
+    run_sudo apt-get install -y curl git build-essential ufw debian-keyring debian-archive-keyring apt-transport-https
 
-    # Check Node.js
+    # Hentikan dan nonaktifkan Nginx jika ada agar tidak bentrok dengan Caddy di port 80/443
+    if command -v nginx &> /dev/null; then
+        echo -e "${YELLOW}[INFO] Menonaktifkan Nginx agar tidak bentrok dengan Caddy di port 80/443...${NC}"
+        run_sudo systemctl stop nginx 2>/dev/null || true
+        run_sudo systemctl disable nginx 2>/dev/null || true
+    fi
+
+    # Check Node.js 20
     if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | tr -d 'v')" -lt 18 ]; then
         echo -e "${YELLOW}[2/4] Menginstall Node.js 20 LTS (NodeSource)...${NC}"
         curl -fsSL https://deb.nodesource.com/setup_20.x | run_sudo -E bash -
@@ -70,14 +80,17 @@ install_system_dependencies() {
         echo -e "${GREEN}✓ PM2 sudah terinstall.${NC}"
     fi
 
-    # Check Nginx
-    if ! command -v nginx &> /dev/null; then
-        echo -e "${YELLOW}[4/4] Menginstall Nginx Web Server...${NC}"
-        run_sudo apt-get install -y nginx
-        run_sudo systemctl enable nginx
-        run_sudo systemctl start nginx
+    # Check Caddy
+    if ! command -v caddy &> /dev/null; then
+        echo -e "${YELLOW}[4/4] Menginstall Caddy Web Server...${NC}"
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | run_sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg --yes
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | run_sudo tee /etc/apt/sources.list.d/caddy-stable.list
+        run_sudo apt-get update -y
+        run_sudo apt-get install -y caddy
+        run_sudo systemctl enable caddy
+        run_sudo systemctl start caddy
     else
-        echo -e "${GREEN}✓ Nginx sudah terinstall.${NC}"
+        echo -e "${GREEN}✓ Caddy Web Server $(caddy version | awk '{print $1}') sudah aktif.${NC}"
     fi
 }
 
@@ -86,7 +99,7 @@ setup_env_file() {
     if [ ! -f ".env" ]; then
         echo -e "\n${YELLOW}[INFO] File .env belum ditemukan. Membuat file .env baru...${NC}"
         
-        echo -e "${CYAN}Masukkan DATABASE_URL (PostgreSQL Supabase / Direct):${NC}"
+        echo -e "${CYAN}Masukkan DATABASE_URL (Supabase PostgreSQL / Direct):${NC}"
         read -r -p "DATABASE_URL: " input_db_url
         if [ -z "$input_db_url" ]; then
             input_db_url="postgresql://postgres.gbkdpkjywtxuihglqial:cJUhl6IRWigCbMOh@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres?connection_limit=2"
@@ -118,6 +131,51 @@ EOF
     fi
 }
 
+configure_caddy() {
+    echo -e "\n${YELLOW}Mengkonfigurasi Caddy Web Server untuk $DOMAIN...${NC}"
+    
+    # Buat direktori /etc/caddy jika belum ada
+    run_sudo mkdir -p /etc/caddy
+    if [ ! -f "$CADDYFILE" ]; then
+        run_sudo touch "$CADDYFILE"
+    fi
+
+    # Backup Caddyfile yang ada
+    BACKUP_FILE="/etc/caddy/Caddyfile.bak_$(date +%s)"
+    run_sudo cp "$CADDYFILE" "$BACKUP_FILE"
+    echo -e "${BLUE}Backup Caddyfile disimpan di: $BACKUP_FILE${NC}"
+
+    # Cek apakah blok jkclin.com sudah ada di Caddyfile
+    if grep -q "$DOMAIN" "$CADDYFILE"; then
+        echo -e "${GREEN}✓ Konfigurasi untuk $DOMAIN sudah ada di Caddyfile.${NC}"
+    else
+        echo -e "${YELLOW}Menambahkan konfigurasi reverse proxy $DOMAIN ke Caddyfile...${NC}"
+        
+        # Tambahkan blok domain ke Caddyfile tanpa merusak konfigurasi website/domain lain
+        run_sudo bash -c "cat << 'EOF' >> $CADDYFILE
+
+# --- JKC Bed Management System ($DOMAIN) ---
+$DOMAIN, www.$DOMAIN {
+    reverse_proxy 127.0.0.1:$PORT
+}
+EOF"
+        echo -e "${GREEN}✓ Blok konfigurasi $DOMAIN berhasil ditambahkan ke Caddyfile.${NC}"
+    fi
+
+    # Validasi konfigurasi Caddy
+    echo -e "${YELLOW}Memvalidasi konfigurasi Caddy...${NC}"
+    if run_sudo caddy validate --adapter caddyfile --config "$CADDYFILE"; then
+        echo -e "${GREEN}✓ Validasi Caddyfile sukses!${NC}"
+        run_sudo systemctl reload caddy || run_sudo systemctl restart caddy
+        echo -e "${GREEN}✓ Caddy berhasil di-reload!${NC}"
+    else
+        echo -e "${RED}[ERROR] Validasi Caddyfile gagal! Mengembalikan backup...${NC}"
+        run_sudo cp "$BACKUP_FILE" "$CADDYFILE"
+        run_sudo systemctl reload caddy 2>/dev/null || true
+        return 1
+    fi
+}
+
 # ==============================================================================
 # MENU 1: Setup Awal & Jalankan Lokal (Dev Mode)
 # ==============================================================================
@@ -141,31 +199,29 @@ menu_setup_local() {
 }
 
 # ==============================================================================
-# MENU 2: Setup & Deploy Production (Domain jkclin.com)
+# MENU 2: Setup & Deploy Production (Domain jkclin.com via Caddy)
 # ==============================================================================
 menu_deploy_production() {
     print_banner
-    echo -e "${YELLOW}=== MENU 2: DEPLOY FULL PRODUCTION (DOMAIN $DOMAIN) ===${NC}\n"
+    echo -e "${YELLOW}=== MENU 2: DEPLOY FULL PRODUCTION (DOMAIN $DOMAIN via CADDY) ===${NC}\n"
 
     install_system_dependencies
     setup_env_file
 
     cd "$APP_DIR" || exit 1
 
-    echo -e "\n${YELLOW}[1/6] Menginstall package & dependencies (npm install)...${NC}"
+    echo -e "\n${YELLOW}[1/5] Menginstall package & dependencies (npm install)...${NC}"
     npm install
 
-    echo -e "\n${YELLOW}[2/6] Generate Prisma Client...${NC}"
+    echo -e "\n${YELLOW}[2/5] Generate Prisma Client...${NC}"
     npx prisma generate
 
-    echo -e "\n${YELLOW}[3/6] Membangun project Next.js (npm run build)...${NC}"
+    echo -e "\n${YELLOW}[3/5] Membangun project Next.js (npm run build)...${NC}"
     npm run build
 
-    echo -e "\n${YELLOW}[4/6] Mengkonfigurasi PM2 Process Manager...${NC}"
-    # Stop existing instance if running
+    echo -e "\n${YELLOW}[4/5] Mengkonfigurasi PM2 Process Manager...${NC}"
     pm2 delete "$APP_NAME" 2>/dev/null || true
 
-    # Start with ecosystem if available, or direct npm start
     if [ -f "ecosystem.config.js" ]; then
         pm2 start ecosystem.config.js
     else
@@ -176,59 +232,22 @@ menu_deploy_production() {
     pm2 startup | tail -n 1 | grep -E "sudo|pm2" | bash 2>/dev/null || true
     echo -e "${GREEN}✓ Aplikasi berhasil berjalan di PM2!${NC}"
 
-    echo -e "\n${YELLOW}[5/6] Mengkonfigurasi Nginx Reverse Proxy untuk $DOMAIN...${NC}"
-    NGINX_CONF="/etc/nginx/sites-available/$DOMAIN"
-    
-    run_sudo bash -c "cat << 'EOF' > $NGINX_CONF
-server {
-    listen 80;
-    listen [::]:80;
-    server_name jkclin.com www.jkclin.com;
+    echo -e "\n${YELLOW}[5/5] Mengkonfigurasi Caddy & Auto HTTPS...${NC}"
+    configure_caddy
 
-    client_max_body_size 50M;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF"
-
-    run_sudo ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/$DOMAIN"
-    # Remove default site if exists to avoid conflicts
-    run_sudo rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
-
-    if run_sudo nginx -t; then
-        run_sudo systemctl reload nginx
-        echo -e "${GREEN}✓ Konfigurasi Nginx berhasil diterapkan dan di-reload!${NC}"
-    else
-        echo -e "${RED}[ERROR] Konfigurasi Nginx gagal saat ditest.${NC}"
-    fi
-
-    echo -e "\n${YELLOW}[6/6] Mengkonfigurasi Firewall UFW...${NC}"
+    # Konfigurasi UFW
+    echo -e "\n${YELLOW}Memastikan Firewall UFW membuka port yang diperlukan...${NC}"
     run_sudo ufw allow OpenSSH 2>/dev/null || true
-    run_sudo ufw allow 'Nginx Full' 2>/dev/null || true
     run_sudo ufw allow 80/tcp 2>/dev/null || true
     run_sudo ufw allow 443/tcp 2>/dev/null || true
     run_sudo ufw --force enable 2>/dev/null || true
-    echo -e "${GREEN}✓ Firewall UFW aktif (Port 22, 80, 443 diizinkan).${NC}"
+    echo -e "${GREEN}✓ Firewall UFW siap (Port 22, 80, 443 diizinkan).${NC}"
 
     echo -e "\n${PURPLE}==============================================================================${NC}"
-    echo -e "${GREEN}🎉 DEPLOY SELESAI! Aplikasi kini aktif di: http://$DOMAIN ${NC}"
+    echo -e "${GREEN}🎉 DEPLOY PRODUCTION BERHASIL!${NC}"
+    echo -e "${WHITE}Aplikasi Anda sekarang aktif di: ${CYAN}https://$DOMAIN${NC}"
+    echo -e "${GREEN}✓ Caddy secara otomatis menerbitkan dan memperbarui sertifikat SSL HTTPS!${NC}"
     echo -e "${PURPLE}==============================================================================${NC}"
-    
-    echo -e "\n${CYAN}Apakah Anda ingin langsung memasang SSL HTTPS (Let's Encrypt / Certbot) sekarang? (y/n)${NC}"
-    read -r -p "Pilihan [y/n]: " setup_ssl_choice
-    if [[ "$setup_ssl_choice" =~ ^[Yy]$ ]]; then
-        menu_setup_ssl
-    fi
 
     echo -e "\nTekan Enter untuk kembali ke menu utama..."
     read -r
@@ -243,17 +262,15 @@ menu_update_github() {
 
     cd "$APP_DIR" || exit 1
 
-    # Check git repository
     if [ ! -d ".git" ]; then
         echo -e "${RED}[ERROR] Folder ini bukan git repository. Pastikan Anda sudah clone via git.${NC}"
         echo -e "Tekan Enter untuk kembali..."; read -r; return
     fi
 
-    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "VPS-Version")
     echo -e "${BLUE}Cabang Git aktif: ${WHITE}$current_branch${NC}"
     
     echo -e "\n${YELLOW}[1/5] Mengambil update terbaru dari GitHub (git pull origin $current_branch)...${NC}"
-    # Stash any local uncommitted files just in case
     git stash 2>/dev/null || true
     git pull origin "$current_branch"
 
@@ -278,8 +295,11 @@ menu_update_github() {
     fi
     pm2 save
 
+    # Pastikan Caddy tetap reload
+    run_sudo systemctl reload caddy 2>/dev/null || true
+
     echo -e "\n${GREEN}==============================================================================${NC}"
-    echo -e "${GREEN}✓ Project berhasil diperbarui dari GitHub dan aktif kembali!${NC}"
+    echo -e "${GREEN}✓ Project berhasil diperbarui dari GitHub dan aktif kembali di https://$DOMAIN!${NC}"
     echo -e "${GREEN}==============================================================================${NC}"
 
     echo -e "\nTekan Enter untuk kembali ke menu utama..."
@@ -287,34 +307,51 @@ menu_update_github() {
 }
 
 # ==============================================================================
-# MENU 4: Setup / Perbarui SSL HTTPS (Certbot Let's Encrypt)
+# MENU 4: Cek & Reload Caddy / SSL Status
 # ==============================================================================
-menu_setup_ssl() {
+menu_caddy_status() {
     print_banner
-    echo -e "${YELLOW}=== MENU 4: SETUP / PERBARUI SSL HTTPS (LET'S ENCRYPT) ===${NC}\n"
+    echo -e "${YELLOW}=== MENU 4: CEK & RELOAD CADDY / SSL STATUS ===${NC}\n"
 
-    echo -e "${BLUE}Domain yang akan dipasangi SSL: ${WHITE}$DOMAIN www.$DOMAIN${NC}"
-    echo -e "${YELLOW}Pastikan DNS Domain ($DOMAIN) sudah diarahkan (A Record) ke IP VPS ini!${NC}\n"
+    echo -e "1. Cek Status Service Caddy"
+    echo -e "2. Lihat Isi Caddyfile (/etc/caddy/Caddyfile)"
+    echo -e "3. Validasi & Reload Caddy"
+    echo -e "4. Lihat Live Log Caddy (Cek penerbitan sertifikat SSL)"
+    echo -e "0. Kembali ke Menu Utama"
+    echo ""
+    read -r -p "Pilihan Anda [0-4]: " caddy_choice
 
-    read -r -p "Lanjutkan pemasangan SSL? (y/n): " confirm_ssl
-    if [[ ! "$confirm_ssl" =~ ^[Yy]$ ]]; then
-        return
-    fi
+    case $caddy_choice in
+        1)
+            echo -e "\n${CYAN}--- Status Caddy ---${NC}"
+            run_sudo systemctl status caddy --no-pager
+            ;;
+        2)
+            echo -e "\n${CYAN}--- Isi /etc/caddy/Caddyfile ---${NC}"
+            run_sudo cat "$CADDYFILE"
+            ;;
+        3)
+            echo -e "\n${YELLOW}Memvalidasi & Mereload Caddy...${NC}"
+            if run_sudo caddy validate --adapter caddyfile --config "$CADDYFILE"; then
+                run_sudo systemctl reload caddy
+                echo -e "${GREEN}✓ Caddy berhasil di-reload!${NC}"
+            else
+                echo -e "${RED}[ERROR] Validasi Caddyfile gagal.${NC}"
+            fi
+            ;;
+        4)
+            echo -e "\n${YELLOW}Membuka log Caddy (Tekan CTRL+C untuk keluar)...${NC}"
+            run_sudo journalctl -u caddy -n 50 -f
+            ;;
+        0)
+            return
+            ;;
+        *)
+            echo -e "${RED}Pilihan tidak valid.${NC}"
+            ;;
+    esac
 
-    echo -e "\n${YELLOW}[1/2] Memeriksa & Menginstall Certbot...${NC}"
-    run_sudo apt-get update -y
-    run_sudo apt-get install -y certbot python3-certbot-nginx
-
-    echo -e "\n${YELLOW}[2/2] Memproses sertifikat SSL dari Let's Encrypt...${NC}"
-    run_sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect || {
-        echo -e "${YELLOW}Mencoba kembali dengan meminta email jika pendaftaran otomatis gagal...${NC}"
-        run_sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN"
-    }
-
-    run_sudo systemctl reload nginx
-    echo -e "\n${GREEN}✓ SSL HTTPS berhasil diaktifkan untuk https://$DOMAIN!${NC}"
-    
-    echo -e "\nTekan Enter untuk kembali ke menu utama..."
+    echo -e "\nTekan Enter untuk melanjutkan..."
     read -r
 }
 
@@ -368,56 +405,50 @@ menu_database_tools() {
 }
 
 # ==============================================================================
-# MENU 6: Service Status & Monitoring (PM2 / Nginx Logs)
+# MENU 6: Service Status & Monitoring (PM2 Logs)
 # ==============================================================================
 menu_service_manager() {
     print_banner
     echo -e "${YELLOW}=== MENU 6: SERVICE STATUS & MONITORING ===${NC}\n"
 
-    echo -e "1. Lihat Status PM2 & Nginx"
-    echo -e "2. Lihat Realtime Logs Aplikasi (pm2 logs)"
+    echo -e "1. Lihat Status PM2 & Caddy"
+    echo -e "2. Lihat Realtime Logs Aplikasi Next.js (pm2 logs)"
     echo -e "3. Restart Aplikasi (pm2 restart)"
     echo -e "4. Stop Aplikasi (pm2 stop)"
     echo -e "5. Start Aplikasi (pm2 start)"
-    echo -e "6. Reload Nginx"
     echo -e "0. Kembali ke Menu Utama"
     echo ""
-    read -r -p "Pilihan Anda [0-6]: " svc_choice
+    read -r -p "Pilihan Anda [0-5]: " svc_choice
 
     case $svc_choice in
         1)
             echo -e "\n${CYAN}--- Status PM2 ---${NC}"
             pm2 status
-            echo -e "\n${CYAN}--- Status Nginx ---${NC}"
-            run_sudo systemctl status nginx --no-pager
+            echo -e "\n${CYAN}--- Status Caddy ---${NC}"
+            run_sudo systemctl status caddy --no-pager
             ;;
         2)
-            echo -e "\n${YELLOW}Membuka live log (Tekan CTRL+C untuk keluar dari log)...${NC}"
+            echo -e "\n${YELLOW}Membuka live log PM2 (Tekan CTRL+C untuk keluar dari log)...${NC}"
             pm2 logs "$APP_NAME"
             ;;
         3)
-            echo -e "\n${YELLOW}Merestart aplikasi...${NC}"
+            echo -e "\n${YELLOW}Merestart aplikasi PM2...${NC}"
             pm2 restart "$APP_NAME"
             echo -e "${GREEN}✓ Aplikasi berhasil di-restart.${NC}"
             ;;
         4)
-            echo -e "\n${YELLOW}Menghentikan aplikasi...${NC}"
+            echo -e "\n${YELLOW}Menghentikan aplikasi PM2...${NC}"
             pm2 stop "$APP_NAME"
             echo -e "${GREEN}✓ Aplikasi dihentikan.${NC}"
             ;;
         5)
-            echo -e "\n${YELLOW}Menjalankan aplikasi...${NC}"
+            echo -e "\n${YELLOW}Menjalankan aplikasi PM2...${NC}"
             if [ -f "ecosystem.config.js" ]; then
                 pm2 start ecosystem.config.js
             else
                 pm2 start npm --name "$APP_NAME" -- start -- -p $PORT
             fi
             echo -e "${GREEN}✓ Aplikasi dijalankan.${NC}"
-            ;;
-        6)
-            echo -e "\n${YELLOW}Mereload Nginx...${NC}"
-            run_sudo nginx -t && run_sudo systemctl reload nginx
-            echo -e "${GREEN}✓ Nginx berhasil di-reload.${NC}"
             ;;
         0)
             return
@@ -440,11 +471,11 @@ main() {
         print_banner
         echo -e "${WHITE}Silakan pilih menu operasi yang ingin dijalankan:${NC}\n"
         echo -e "  ${GREEN}[1]${NC} 🚀 ${WHITE}Setup Awal & Jalankan Lokal (Dev Mode)${NC}"
-        echo -e "  ${GREEN}[2]${NC} 🌐 ${WHITE}Setup & Deploy Full Production (Domain: $DOMAIN)${NC}"
+        echo -e "  ${GREEN}[2]${NC} 🌐 ${WHITE}Setup & Deploy Full Production (Domain: $DOMAIN via Caddy)${NC}"
         echo -e "  ${GREEN}[3]${NC} 🔄 ${WHITE}Update Project dari GitHub (Git Pull & Rebuild)${NC}"
-        echo -e "  ${GREEN}[4]${NC} 🔒 ${WHITE}Setup / Perbarui SSL HTTPS (Certbot Let's Encrypt)${NC}"
+        echo -e "  ${GREEN}[4]${NC} 🔒 ${WHITE}Cek & Reload Caddy / SSL Status${NC}"
         echo -e "  ${GREEN}[5]${NC} 🗄️  ${WHITE}Database & Seeding Tools${NC}"
-        echo -e "  ${GREEN}[6]${NC} 📊 ${WHITE}Service Status, Logs & Restart${NC}"
+        echo -e "  ${GREEN}[6]${NC} 📊 ${WHITE}Service Status, Logs & Restart (PM2)${NC}"
         echo -e "  ${RED}[0]${NC} ❌ ${WHITE}Keluar${NC}"
         echo -e "\n${CYAN}------------------------------------------------------------------------------${NC}"
         read -r -p "Masukkan pilihan Anda [0-6]: " main_choice
@@ -453,7 +484,7 @@ main() {
             1) menu_setup_local ;;
             2) menu_deploy_production ;;
             3) menu_update_github ;;
-            4) menu_setup_ssl ;;
+            4) menu_caddy_status ;;
             5) menu_database_tools ;;
             6) menu_service_manager ;;
             0)
