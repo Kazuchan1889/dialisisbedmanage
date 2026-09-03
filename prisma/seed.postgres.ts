@@ -20,7 +20,7 @@ const lantai2Beds = [
   { bedCode: 'T23', floor: 2, section: 'KORTEKS', position: 6 },
   { bedCode: 'T22', floor: 2, section: 'KORTEKS', position: 7 },
 
-  // Medula Room (13 beds)
+  // Medula Room (12 beds)
   { bedCode: 'T19', floor: 2, section: 'MEDULA', position: 1 },
   { bedCode: 'T18', floor: 2, section: 'MEDULA', position: 2 },
   { bedCode: 'T17', floor: 2, section: 'MEDULA', position: 3 },
@@ -33,7 +33,6 @@ const lantai2Beds = [
   { bedCode: 'T11', floor: 2, section: 'MEDULA', position: 10 },
   { bedCode: 'T12', floor: 2, section: 'MEDULA', position: 11 },
   { bedCode: 'T13', floor: 2, section: 'MEDULA', position: 12 },
-  { bedCode: 'L2-BLANK', floor: 2, section: 'MEDULA', position: 13 },
 
   // Papila Room (7 beds)
   { bedCode: 'T1', floor: 2, section: 'PAPILA', position: 1 },

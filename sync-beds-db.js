@@ -17,7 +17,7 @@ const lantai2Beds = [
   { bedCode: 'T23', floor: 2, section: 'KORTEKS', position: 6 },
   { bedCode: 'T22', floor: 2, section: 'KORTEKS', position: 7 },
 
-  // Medula Room (13 beds)
+  // Medula Room (12 beds)
   { bedCode: 'T19', floor: 2, section: 'MEDULA', position: 1 },
   { bedCode: 'T18', floor: 2, section: 'MEDULA', position: 2 },
   { bedCode: 'T17', floor: 2, section: 'MEDULA', position: 3 },
@@ -30,7 +30,6 @@ const lantai2Beds = [
   { bedCode: 'T11', floor: 2, section: 'MEDULA', position: 10 },
   { bedCode: 'T12', floor: 2, section: 'MEDULA', position: 11 },
   { bedCode: 'T13', floor: 2, section: 'MEDULA', position: 12 },
-  { bedCode: 'L2-BLANK', floor: 2, section: 'MEDULA', position: 13 },
 
   // Papila Room (7 beds)
   { bedCode: 'T1', floor: 2, section: 'PAPILA', position: 1 },
@@ -76,8 +75,8 @@ async function main() {
 
   // 2. Ensure all target beds exist or are updated
   for (const b of allTargetBeds) {
-    const existing = await prisma.bed.findUnique({ where: { bedCode: b.bedCode } });
-    if (existing) {
+    let bedRecord = await prisma.bed.findUnique({ where: { bedCode: b.bedCode } });
+    if (bedRecord) {
       await prisma.bed.update({
         where: { bedCode: b.bedCode },
         data: {
@@ -88,7 +87,7 @@ async function main() {
       });
       console.log(`  Updated bed: ${b.bedCode}`);
     } else {
-      const created = await prisma.bed.create({
+      bedRecord = await prisma.bed.create({
         data: {
           bedCode: b.bedCode,
           floor: b.floor,
@@ -98,18 +97,32 @@ async function main() {
         }
       });
       console.log(`  Created bed: ${b.bedCode}`);
-      
-      const machineCode = `M-${b.bedCode.replace(/\s+/g, '')}`;
-      await prisma.machine.upsert({
-        where: { machineCode },
-        update: { bedId: created.id, floor: b.floor },
-        create: {
-          machineCode,
-          floor: b.floor,
-          status: 'AVAILABLE',
-          bedId: created.id
-        }
+    }
+
+    const machineCode = `M-${b.bedCode.replace(/\s+/g, '')}`;
+    const existingMachineForBed = await prisma.machine.findFirst({ where: { bedId: bedRecord.id } });
+    if (existingMachineForBed) {
+      await prisma.machine.update({
+        where: { id: existingMachineForBed.id },
+        data: { machineCode, floor: b.floor }
       });
+    } else {
+      const existingByCode = await prisma.machine.findUnique({ where: { machineCode } });
+      if (existingByCode) {
+        await prisma.machine.update({
+          where: { id: existingByCode.id },
+          data: { bedId: bedRecord.id, floor: b.floor }
+        });
+      } else {
+        await prisma.machine.create({
+          data: {
+            machineCode,
+            floor: b.floor,
+            status: 'AVAILABLE',
+            bedId: bedRecord.id
+          }
+        });
+      }
     }
   }
 

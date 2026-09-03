@@ -295,7 +295,7 @@ export default function Lantai2Page() {
                     marginBottom: 10,
                   }}
                 >
-                  MEDULA ROOM (13 BED)
+                  MEDULA ROOM (12 Bed)
                 </div>
 
                 {/* LEFT SIDE */}
@@ -346,7 +346,6 @@ export default function Lantai2Page() {
                   {B('T11')}
                   {B('T12')}
                   {B('T13')}
-                  {B('L2-BLANK', false)}
                 </div>
 
                 {/* CENTER OBJECTS / WALKWAY */}
