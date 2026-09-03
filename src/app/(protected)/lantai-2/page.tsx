@@ -94,11 +94,31 @@ export default function Lantai2Page() {
     );
   }
 
-  // Helper to render a bed cell or empty placeholder
-  const B = (code: string) => {
+  // Helper to render a bed cell or fallback bed unit
+  const B = (code: string, showCode = true) => {
     const bed = getBed(code);
-    if (!bed) return <div style={{ width: 72, height: 22 }} />;
-    return <BedUnit bed={bed} onClick={setSelectedBed} />;
+    if (!bed) {
+      return (
+        <div
+          className="bed-unit bed-available"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setSelectedBed({
+            id: `temp-${code}`,
+            bedCode: code,
+            floor: 2,
+            section: '',
+            position: 0,
+            status: 'AVAILABLE'
+          })}
+        >
+          <div className="bed-rect">
+            {showCode && <span>{code}</span>}
+          </div>
+          <div className="machine-sq" />
+        </div>
+      );
+    }
+    return <BedUnit bed={bed} onClick={setSelectedBed} showCode={showCode} />;
   };
 
   return (
@@ -212,12 +232,12 @@ export default function Lantai2Page() {
             {/* ===== ROW 1: TOP ===== */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 16, alignItems: 'stretch' }}>
 
-              {/* KALIKS ROOM (4 Bed): T29, A30 / T28, T31 */}
+              {/* KALIKS ROOM (4 Bed): T28, A29 / T27, A30 */}
               <div className="bed-section" style={{ width: 190, padding: 12 }}>
                 <div className="bed-section-label">KALIKS ROOM (4 Bed)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                  {B('T29')}{B('A30')}
-                  {B('T28')}{B('T31')}
+                  {B('T28')}{B('A29')}
+                  {B('T27')}{B('A30')}
                 </div>
               </div>
 
@@ -244,14 +264,14 @@ export default function Lantai2Page() {
             {/* ===== ROW 2: BOTTOM ===== */}
             <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
 
-              {/* KORTEKS ROOM (7 Bed): A27 solo, lalu A26/T21, A25/T22, A24/T23 */}
+              {/* KORTEKS ROOM (7 Bed): A26 solo, lalu A25/T20, A24/T21, T23/T22 */}
               <div className="bed-section" style={{ width: 190, padding: 12 }}>
                 <div className="bed-section-label">KORTEKS ROOM (7 Bed)</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 10px' }}>
-                  {B('A27')}<div style={{ width: 72, height: 22 }} />
-                  {B('A26')}{B('T21')}
-                  {B('A25')}{B('T22')}
-                  {B('A24')}{B('T23')}
+                  {B('A26')}<div style={{ width: 72, height: 22 }} />
+                  {B('A25')}{B('T20')}
+                  {B('A24')}{B('T21')}
+                  {B('T23')}{B('T22')}
                 </div>
               </div>
 
@@ -289,9 +309,9 @@ export default function Lantai2Page() {
                     gap: 14,
                   }}
                 >
-                  {B('T20')}
                   {B('T19')}
                   {B('T18')}
+                  {B('T17')}
 
                   {/* divider space */}
                   <div
@@ -304,9 +324,9 @@ export default function Lantai2Page() {
                     }}
                   />
 
-                  {B('T17')}
                   {B('T16')}
                   {B('T15')}
+                  {B('T14')}
                 </div>
 
                 {/* RIGHT SIDE */}
@@ -326,7 +346,7 @@ export default function Lantai2Page() {
                   {B('T11')}
                   {B('T12')}
                   {B('T13')}
-                  {B('T14')}
+                  {B('L2-BLANK', false)}
                 </div>
 
                 {/* CENTER OBJECTS / WALKWAY */}

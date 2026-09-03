@@ -3,82 +3,68 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-// Lantai 2 bed layout (matching the floor map image)
+// Lantai 2 bed layout (original)
 const lantai2Beds = [
-  // Section A - Top Left (blue bordered area)
-  { bedCode: 'L2-A1', floor: 2, section: 'A', position: 1 },
-  { bedCode: 'L2-A2', floor: 2, section: 'A', position: 2 },
-  { bedCode: 'L2-A3', floor: 2, section: 'A', position: 3 },
-  { bedCode: 'L2-A4', floor: 2, section: 'A', position: 4 },
-  { bedCode: 'L2-A5', floor: 2, section: 'A', position: 5 },
-  { bedCode: 'L2-A6', floor: 2, section: 'A', position: 6 },
-  { bedCode: 'L2-A7', floor: 2, section: 'A', position: 7 },
-  { bedCode: 'L2-A8', floor: 2, section: 'A', position: 8 },
-  // Section B - Left side (middle row)
-  { bedCode: 'L2-B1', floor: 2, section: 'B', position: 1 },
-  { bedCode: 'L2-B2', floor: 2, section: 'B', position: 2 },
-  { bedCode: 'L2-B3', floor: 2, section: 'B', position: 3 },
-  { bedCode: 'L2-B4', floor: 2, section: 'B', position: 4 },
-  { bedCode: 'L2-B5', floor: 2, section: 'B', position: 5 },
-  { bedCode: 'L2-B6', floor: 2, section: 'B', position: 6 },
-  { bedCode: 'L2-B7', floor: 2, section: 'B', position: 7 },
-  { bedCode: 'L2-B8', floor: 2, section: 'B', position: 8 },
-  { bedCode: 'L2-B9', floor: 2, section: 'B', position: 9 },
-  { bedCode: 'L2-B10', floor: 2, section: 'B', position: 10 },
-  // Section C - Center left (middle row)
-  { bedCode: 'L2-C1', floor: 2, section: 'C', position: 1 },
-  { bedCode: 'L2-C2', floor: 2, section: 'C', position: 2 },
-  { bedCode: 'L2-C3', floor: 2, section: 'C', position: 3 },
-  { bedCode: 'L2-C4', floor: 2, section: 'C', position: 4 },
-  { bedCode: 'L2-C5', floor: 2, section: 'C', position: 5 },
-  { bedCode: 'L2-C6', floor: 2, section: 'C', position: 6 },
-  // Section D - Center right (middle row)
-  { bedCode: 'L2-D1', floor: 2, section: 'D', position: 1 },
-  { bedCode: 'L2-D2', floor: 2, section: 'D', position: 2 },
-  { bedCode: 'L2-D3', floor: 2, section: 'D', position: 3 },
-  { bedCode: 'L2-D4', floor: 2, section: 'D', position: 4 },
-  { bedCode: 'L2-D5', floor: 2, section: 'D', position: 5 },
-  { bedCode: 'L2-D6', floor: 2, section: 'D', position: 6 },
-  // Section E - Right side (middle row)
-  { bedCode: 'L2-E1', floor: 2, section: 'E', position: 1 },
-  { bedCode: 'L2-E2', floor: 2, section: 'E', position: 2 },
-  { bedCode: 'L2-E3', floor: 2, section: 'E', position: 3 },
-  { bedCode: 'L2-E4', floor: 2, section: 'E', position: 4 },
-  { bedCode: 'L2-E5', floor: 2, section: 'E', position: 5 },
-  { bedCode: 'L2-E6', floor: 2, section: 'E', position: 6 },
-  { bedCode: 'L2-E7', floor: 2, section: 'E', position: 7 },
-  { bedCode: 'L2-E8', floor: 2, section: 'E', position: 8 },
-  { bedCode: 'L2-E9', floor: 2, section: 'E', position: 9 },
-  { bedCode: 'L2-E10', floor: 2, section: 'E', position: 10 },
-  // Section F - Bottom center
-  { bedCode: 'L2-F1', floor: 2, section: 'F', position: 1 },
-  { bedCode: 'L2-F2', floor: 2, section: 'F', position: 2 },
-  { bedCode: 'L2-F3', floor: 2, section: 'F', position: 3 },
-  { bedCode: 'L2-F4', floor: 2, section: 'F', position: 4 },
-  { bedCode: 'L2-F5', floor: 2, section: 'F', position: 5 },
-  { bedCode: 'L2-F6', floor: 2, section: 'F', position: 6 },
+  // Kaliks Room (4 beds)
+  { bedCode: 'T28', floor: 2, section: 'KALIKS', position: 1 },
+  { bedCode: 'A29', floor: 2, section: 'KALIKS', position: 2 },
+  { bedCode: 'T27', floor: 2, section: 'KALIKS', position: 3 },
+  { bedCode: 'A30', floor: 2, section: 'KALIKS', position: 4 },
+
+  // Korteks Room (7 beds)
+  { bedCode: 'A26', floor: 2, section: 'KORTEKS', position: 1 },
+  { bedCode: 'A25', floor: 2, section: 'KORTEKS', position: 2 },
+  { bedCode: 'T20', floor: 2, section: 'KORTEKS', position: 3 },
+  { bedCode: 'A24', floor: 2, section: 'KORTEKS', position: 4 },
+  { bedCode: 'T21', floor: 2, section: 'KORTEKS', position: 5 },
+  { bedCode: 'T23', floor: 2, section: 'KORTEKS', position: 6 },
+  { bedCode: 'T22', floor: 2, section: 'KORTEKS', position: 7 },
+
+  // Medula Room (13 beds)
+  { bedCode: 'T19', floor: 2, section: 'MEDULA', position: 1 },
+  { bedCode: 'T18', floor: 2, section: 'MEDULA', position: 2 },
+  { bedCode: 'T17', floor: 2, section: 'MEDULA', position: 3 },
+  { bedCode: 'T16', floor: 2, section: 'MEDULA', position: 4 },
+  { bedCode: 'T15', floor: 2, section: 'MEDULA', position: 5 },
+  { bedCode: 'T14', floor: 2, section: 'MEDULA', position: 6 },
+  { bedCode: 'T8',  floor: 2, section: 'MEDULA', position: 7 },
+  { bedCode: 'T9',  floor: 2, section: 'MEDULA', position: 8 },
+  { bedCode: 'T10', floor: 2, section: 'MEDULA', position: 9 },
+  { bedCode: 'T11', floor: 2, section: 'MEDULA', position: 10 },
+  { bedCode: 'T12', floor: 2, section: 'MEDULA', position: 11 },
+  { bedCode: 'T13', floor: 2, section: 'MEDULA', position: 12 },
+  { bedCode: 'L2-BLANK', floor: 2, section: 'MEDULA', position: 13 },
+
+  // Papila Room (7 beds)
+  { bedCode: 'T1', floor: 2, section: 'PAPILA', position: 1 },
+  { bedCode: 'T7', floor: 2, section: 'PAPILA', position: 2 },
+  { bedCode: 'T2', floor: 2, section: 'PAPILA', position: 3 },
+  { bedCode: 'T6', floor: 2, section: 'PAPILA', position: 4 },
+  { bedCode: 'T3', floor: 2, section: 'PAPILA', position: 5 },
+  { bedCode: 'T5', floor: 2, section: 'PAPILA', position: 6 },
+  { bedCode: 'T4', floor: 2, section: 'PAPILA', position: 7 },
 ];
 
-// Lantai 3 bed layout (matching the floor map image)
+// Lantai 3 bed layout (matching the floor map)
 const lantai3Beds = [
-  // Papila Room (5 beds)
+  // Papila Room (6 beds)
   { bedCode: 'B34', floor: 3, section: 'PAPILA', position: 1 },
-  { bedCode: 'B33', floor: 3, section: 'PAPILA', position: 2 },
-  { bedCode: 'B32', floor: 3, section: 'PAPILA', position: 3 },
-  { bedCode: 'B35', floor: 3, section: 'PAPILA', position: 4 },
-  { bedCode: 'B36', floor: 3, section: 'PAPILA', position: 5 },
+  { bedCode: 'B35', floor: 3, section: 'PAPILA', position: 2 },
+  { bedCode: 'B33', floor: 3, section: 'PAPILA', position: 3 },
+  { bedCode: 'B36', floor: 3, section: 'PAPILA', position: 4 },
+  { bedCode: 'B32', floor: 3, section: 'PAPILA', position: 5 },
+  { bedCode: 'T37', floor: 3, section: 'PAPILA', position: 6 },
 
-  // Medula Room (5 beds)
+  // Medula Room (4 beds)
   { bedCode: 'T39', floor: 3, section: 'MEDULA', position: 1 },
-  { bedCode: 'T38', floor: 3, section: 'MEDULA', position: 2 },
-  { bedCode: 'T37', floor: 3, section: 'MEDULA', position: 3 },
-  { bedCode: 'T40', floor: 3, section: 'MEDULA', position: 4 },
-  { bedCode: 'A41', floor: 3, section: 'MEDULA', position: 5 },
+  { bedCode: 'T40', floor: 3, section: 'MEDULA', position: 2 },
+  { bedCode: 'T38', floor: 3, section: 'MEDULA', position: 3 },
+  { bedCode: 'A41', floor: 3, section: 'MEDULA', position: 4 },
 
   // Korteks Room (3 beds)
-  { bedCode: 'T44', floor: 3, section: 'KORTEKS', position: 1 },
-  { bedCode: 'B43', floor: 3, section: 'KORTEKS', position: 2 },
-  { bedCode: 'T42', floor: 3, section: 'KORTEKS', position: 3 },
+  { bedCode: 'T B44', floor: 3, section: 'KORTEKS', position: 1 },
+  { bedCode: 'B B43', floor: 3, section: 'KORTEKS', position: 2 },
+  { bedCode: 'A B42', floor: 3, section: 'KORTEKS', position: 3 },
 ];
 
 async function main() {

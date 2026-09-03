@@ -216,23 +216,23 @@ export default function Lantai3Page() {
             {/* ===== MIDDLE BED ROWS (3 SECTIONS) ===== */}
             <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', marginBottom: 20 }}>
 
-              {/* Papila Room — Left (5 beds in 2x3 grid layout) */}
+              {/* Papila Room — Left (6 beds in 2x3 grid layout) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>PAPILA ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                  {B('B34')}<div style={{ width: 72, height: 22 }} />
-                  {B('B33')}{B('B35')}
-                  {B('B32')}{B('B36')}
+                  {B('B34')}{B('B35')}
+                  {B('B33')}{B('B36')}
+                  {B('B32')}{B('T37')}
                 </div>
               </div>
 
-              {/* Medula Room — Center (5 beds in 2x3 grid layout) */}
+              {/* Medula Room — Center (4 beds in 2x3 grid layout) */}
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>MEDULA ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                  {B('T39')}<div style={{ width: 72, height: 22 }} />
-                  {B('T38')}{B('T40')}
-                  {B('T37')}{B('A41')}
+                  <div style={{ width: 72, height: 22 }} /><div style={{ width: 72, height: 22 }} />
+                  {B('T39')}{B('T40')}
+                  {B('T38')}{B('A41')}
                 </div>
               </div>
 
@@ -240,9 +240,9 @@ export default function Lantai3Page() {
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>KORTEKS ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
-                  <div style={{ width: 72, height: 22 }} />{B('T44')}
-                  {B('B43')}<div style={{ width: 72, height: 22 }} />
-                  {B('T42')}<div style={{ width: 72, height: 22 }} />
+                  <div style={{ width: 72, height: 22 }} />{B('T B44')}
+                  {B('B B43')}<div style={{ width: 72, height: 22 }} />
+                  {B('A B42')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
             </div>

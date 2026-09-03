@@ -1,9 +1,6 @@
-import { PrismaClient, Role, BedStatus, MachineStatus } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Lantai 2 bed layout (original)
 const lantai2Beds = [
   // Kaliks Room (4 beds)
   { bedCode: 'T28', floor: 2, section: 'KALIKS', position: 1 },
@@ -45,7 +42,6 @@ const lantai2Beds = [
   { bedCode: 'T4', floor: 2, section: 'PAPILA', position: 7 },
 ];
 
-// Lantai 3 bed layout (matching the floor map)
 const lantai3Beds = [
   // Papila Room (6 beds)
   { bedCode: 'B34', floor: 3, section: 'PAPILA', position: 1 },
@@ -68,77 +64,74 @@ const lantai3Beds = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('🔄 Syncing beds in database...');
 
-  // Create admin user
-  const hashedPassword = await bcrypt.hash('admin123', 12);
-  const admin = await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      username: 'admin',
-      password: hashedPassword,
-      name: 'Administrator',
-      role: Role.ADMIN,
-      active: true,
-    },
+  const allTargetBeds = [...lantai2Beds, ...lantai3Beds];
+  const targetCodes = new Set(allTargetBeds.map(b => b.bedCode));
+
+  // 1. Check existing beds in db
+  const existingBeds = await prisma.bed.findMany({
+    include: { machine: true, nurseSchedules: true, patientSchedules: true }
   });
-  console.log('✅ Admin user created:', admin.username);
 
-  // Clean up old Lantai 2 beds and machines
-  console.log('🧹 Cleaning up Lantai 2 machines and beds...');
-  await prisma.machine.deleteMany({ where: { floor: 2 } });
-  await prisma.bed.deleteMany({ where: { floor: 2 } });
+  // 2. Ensure all target beds exist or are updated
+  for (const b of allTargetBeds) {
+    const existing = await prisma.bed.findUnique({ where: { bedCode: b.bedCode } });
+    if (existing) {
+      await prisma.bed.update({
+        where: { bedCode: b.bedCode },
+        data: {
+          floor: b.floor,
+          section: b.section,
+          position: b.position,
+        }
+      });
+      console.log(`  Updated bed: ${b.bedCode}`);
+    } else {
+      const created = await prisma.bed.create({
+        data: {
+          bedCode: b.bedCode,
+          floor: b.floor,
+          section: b.section,
+          position: b.position,
+          status: 'AVAILABLE'
+        }
+      });
+      console.log(`  Created bed: ${b.bedCode}`);
+      
+      const machineCode = `M-${b.bedCode.replace(/\s+/g, '')}`;
+      await prisma.machine.upsert({
+        where: { machineCode },
+        update: { bedId: created.id, floor: b.floor },
+        create: {
+          machineCode,
+          floor: b.floor,
+          status: 'AVAILABLE',
+          bedId: created.id
+        }
+      });
+    }
+  }
 
-  // Seed Lantai 2 beds and machines
-  for (const bedData of lantai2Beds) {
-    const bed = await prisma.bed.create({
-      data: { ...bedData, status: BedStatus.AVAILABLE },
-    });
-
-    const machineCode = `M-${bedData.bedCode}`;
-    await prisma.machine.create({
-      data: {
-        machineCode,
-        floor: bedData.floor,
-        status: MachineStatus.AVAILABLE,
-        bedId: bed.id,
-      },
+  // 3. Remove obsolete beds that are no longer in target list
+  const obsoleteBeds = existingBeds.filter(b => !targetCodes.has(b.bedCode));
+  for (const ob of obsoleteBeds) {
+    console.log(`  Removing obsolete bed: ${ob.bedCode} (Floor ${ob.floor})`);
+    if (ob.machine) {
+      await prisma.machine.delete({ where: { id: ob.machine.id } }).catch(() => {});
+    }
+    await prisma.bed.delete({ where: { id: ob.id } }).catch(e => {
+      console.warn(`    Could not delete ${ob.bedCode}: ${e.message}`);
     });
   }
-  console.log(`✅ Lantai 2: ${lantai2Beds.length} beds + machines created`);
 
-  // Clean up old Lantai 3 beds and machines
-  console.log('🧹 Cleaning up Lantai 3 machines and beds...');
-  await prisma.machine.deleteMany({ where: { floor: 3 } });
-  await prisma.bed.deleteMany({ where: { floor: 3 } });
-
-  // Seed Lantai 3 beds and machines
-  for (const bedData of lantai3Beds) {
-    const bed = await prisma.bed.create({
-      data: { ...bedData, status: BedStatus.AVAILABLE },
-    });
-
-    const machineCode = `M-${bedData.bedCode}`;
-    await prisma.machine.create({
-      data: {
-        machineCode,
-        floor: bedData.floor,
-        status: MachineStatus.AVAILABLE,
-        bedId: bed.id,
-      },
-    });
-  }
-  console.log(`✅ Lantai 3: ${lantai3Beds.length} beds + machines created`);
-
-  console.log('🎉 Seeding complete!');
+  // Verification
+  const finalBeds = await prisma.bed.findMany({
+    orderBy: [{ floor: 'asc' }, { bedCode: 'asc' }]
+  });
+  console.log(`\n✅ Finished sync! Total beds now in DB: ${finalBeds.length}`);
+  console.log('Lantai 2 beds:', finalBeds.filter(b => b.floor === 2).map(b => b.bedCode).join(', '));
+  console.log('Lantai 3 beds:', finalBeds.filter(b => b.floor === 3).map(b => b.bedCode).join(', '));
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Seed error:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch(console.error).finally(() => prisma.$disconnect());
