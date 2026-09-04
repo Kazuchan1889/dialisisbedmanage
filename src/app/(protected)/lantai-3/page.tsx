@@ -220,9 +220,9 @@ export default function Lantai3Page() {
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>PAPILA ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
-                  {B('B34')}{B('B35')}
-                  {B('B33')}{B('B36')}
-                  {B('B32')}{B('T37')}
+                  {B('B33')}{B('B34')}
+                  {B('B32')}{B('B35')}
+                  {B('B31')}{B('T36')}
                 </div>
               </div>
 
@@ -231,8 +231,8 @@ export default function Lantai3Page() {
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>MEDULA ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content' }}>
                   <div style={{ width: 72, height: 22 }} /><div style={{ width: 72, height: 22 }} />
-                  {B('T39')}{B('T40')}
-                  {B('T38')}{B('A41')}
+                  {B('T38')}{B('T39')}
+                  {B('T37')}{B('A40')}
                 </div>
               </div>
 
@@ -240,9 +240,9 @@ export default function Lantai3Page() {
               <div className="bed-section" style={{ flex: 1, padding: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div className="bed-section-label" style={{ textAlign: 'center', width: '100%' }}>KORTEKS ROOM</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 80px', justifyItems: 'center', width: 'fit-content', height: '100%', minHeight: 120 }}>
-                  <div style={{ width: 72, height: 22 }} />{B('T B44')}
-                  {B('B B43')}<div style={{ width: 72, height: 22 }} />
-                  {B('A B42')}<div style={{ width: 72, height: 22 }} />
+                  <div style={{ width: 72, height: 22 }} />{B('T B43')}
+                  {B('B B42')}<div style={{ width: 72, height: 22 }} />
+                  {B('A B41')}<div style={{ width: 72, height: 22 }} />
                 </div>
               </div>
             </div>

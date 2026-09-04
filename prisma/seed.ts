@@ -47,23 +47,23 @@ const lantai2Beds = [
 // Lantai 3 bed layout (matching the floor map)
 const lantai3Beds = [
   // Papila Room (6 beds)
-  { bedCode: 'B34', floor: 3, section: 'PAPILA', position: 1 },
-  { bedCode: 'B35', floor: 3, section: 'PAPILA', position: 2 },
-  { bedCode: 'B33', floor: 3, section: 'PAPILA', position: 3 },
-  { bedCode: 'B36', floor: 3, section: 'PAPILA', position: 4 },
-  { bedCode: 'B32', floor: 3, section: 'PAPILA', position: 5 },
-  { bedCode: 'T37', floor: 3, section: 'PAPILA', position: 6 },
+  { bedCode: 'B33', floor: 3, section: 'PAPILA', position: 1 },
+  { bedCode: 'B34', floor: 3, section: 'PAPILA', position: 2 },
+  { bedCode: 'B32', floor: 3, section: 'PAPILA', position: 3 },
+  { bedCode: 'B35', floor: 3, section: 'PAPILA', position: 4 },
+  { bedCode: 'B31', floor: 3, section: 'PAPILA', position: 5 },
+  { bedCode: 'T36', floor: 3, section: 'PAPILA', position: 6 },
 
   // Medula Room (4 beds)
-  { bedCode: 'T39', floor: 3, section: 'MEDULA', position: 1 },
-  { bedCode: 'T40', floor: 3, section: 'MEDULA', position: 2 },
-  { bedCode: 'T38', floor: 3, section: 'MEDULA', position: 3 },
-  { bedCode: 'A41', floor: 3, section: 'MEDULA', position: 4 },
+  { bedCode: 'T38', floor: 3, section: 'MEDULA', position: 1 },
+  { bedCode: 'T39', floor: 3, section: 'MEDULA', position: 2 },
+  { bedCode: 'T37', floor: 3, section: 'MEDULA', position: 3 },
+  { bedCode: 'A40', floor: 3, section: 'MEDULA', position: 4 },
 
   // Korteks Room (3 beds)
-  { bedCode: 'T B44', floor: 3, section: 'KORTEKS', position: 1 },
-  { bedCode: 'B B43', floor: 3, section: 'KORTEKS', position: 2 },
-  { bedCode: 'A B42', floor: 3, section: 'KORTEKS', position: 3 },
+  { bedCode: 'T B43', floor: 3, section: 'KORTEKS', position: 1 },
+  { bedCode: 'B B42', floor: 3, section: 'KORTEKS', position: 2 },
+  { bedCode: 'A B41', floor: 3, section: 'KORTEKS', position: 3 },
 ];
 
 async function main() {
